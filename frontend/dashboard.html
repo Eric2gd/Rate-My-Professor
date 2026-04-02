@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Rate My Professor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard">
+ 
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span>🎓</span> Rate My Professor
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </nav>
+ 
+  <div class="main">
+    <div class="page-header">
+      <h2>Browse Professors</h2>
+      <p id="greeting">Find and rate your lecturers at Ashesi University</p>
+    </div>
+ 
+    <div id="professor-list">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+ 
+  <script>
+    // Redirect if not logged in
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+ 
+    // Personalise greeting
+    const username = localStorage.getItem("username");
+    if (username) {
+      document.getElementById("greeting").textContent =
+        `Welcome back, ${username}! Here are the listed professors.`;
+    }
+ 
+    async function loadProfessors() {
+      const list = document.getElementById("professor-list");
+ 
+      try {
+        const response = await fetch("http://localhost:3000/professors");
+        const professors = await response.json();
+ 
+        if (professors.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📋</div>
+              <h3>No professors listed yet</h3>
+              <p>Check back soon — professors will appear here once added.</p>
+            </div>`;
+          return;
+        }
+ 
+        list.innerHTML = `<div class="professor-grid">
+          ${professors.map(p => `
+            <div class="professor-card">
+              <div class="avatar">👨‍🏫</div>
+              <h3>${p.name}</h3>
+              <p class="dept">${p.department}</p>
+            </div>
+          `).join("")}
+        </div>`;
+ 
+      } catch (err) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <h3>Connection error</h3>
+            <p>Make sure the backend server is running on port 3000.</p>
+          </div>`;
+      }
+    }
+ 
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      window.location.href = "login.html";
+    }
+ 
+    loadProfessors();
+  </script>
+</body>
+</html>
