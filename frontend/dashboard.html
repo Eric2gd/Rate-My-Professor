@@ -7,30 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
-        .sidebar-active { border-left: 3px solid #6366f1; background: #f3f4ff; color: #6366f1; }
-        .progress-circle {
-            background: conic-gradient(#22c55e 60%, #e2e8f0 0);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .progress-inner {
-            background: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-        }
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body class="flex min-h-screen">
 
@@ -45,47 +22,36 @@
 
         <nav class="flex-1 mt-4">
             <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
-            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 sidebar-active">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3 font-medium">Home</span>
             </a>
-            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+            <a href="#professors-section" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                 <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
             </a>
-            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            <a href="#reviews-section" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">Reviews</span>
             </a>
-            <div class="mt-4">
-                <a href="#" class="flex items-center px-6 py-3 sidebar-active">
-                    <i class="fas fa-star w-5"></i> <span class="ml-3 font-medium">Reviews</span>
-                    <i class="fas fa-chevron-down ml-auto text-xs"></i>
-                </a>
-                <div class="bg-gray-50 py-2">
-                    <a href="#" class="block pl-14 py-2 text-sm text-gray-500">My Contributions</a>
-                    <a href="#" class="block pl-14 py-2 text-sm text-indigo-600 font-medium">Global Feed</a>
-                </div>
-            </div>
-            
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Preferences</p>
-            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-user-circle w-5"></i> <span class="ml-3">Online Profile</span>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
             </a>
-            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-cog w-5"></i> <span class="ml-3">Account Setting</span>
+            <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
             </a>
         </nav>
 
-        <!-- Profile Setup Card -->
         <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
             <div class="flex items-center justify-between mb-3">
                 <div>
                     <h4 class="text-sm font-bold text-gray-800">Profile Setup</h4>
-                    <p class="text-[10px] text-gray-400">Dec 14, 2023</p>
+                    <p id="sidebar-username" class="text-[10px] text-gray-400">Not logged in</p>
                 </div>
                 <div class="progress-circle">
                     <div class="progress-inner">60%</div>
                 </div>
             </div>
-            <button class="w-full py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Complete Setup</button>
+            <button onclick="window.location.href='login.html'" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Complete Setup</button>
         </div>
     </aside>
 
@@ -97,138 +63,65 @@
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                     <i class="fas fa-search"></i>
                 </span>
-                <input class="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm" placeholder="Search Professors or Departments..." type="search">
+                <input id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm" placeholder="Search professors..." type="search">
             </div>
-            
+
             <div class="flex items-center gap-6">
                 <button class="text-gray-400 hover:text-gray-600 relative">
                     <i class="far fa-bell text-xl"></i>
                     <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
-                <button class="text-gray-400 hover:text-gray-600">
-                    <i class="far fa-comment-dots text-xl"></i>
-                </button>
                 <div class="flex items-center gap-3 border-l pl-6">
                     <div class="text-right">
-                        <p class="text-sm font-bold text-gray-800">Eric Mensah Jr.</p>
-                        <p class="text-xs text-gray-400">View Profile</p>
+                        <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                        <a href="login.html" class="text-xs text-indigo-500 hover:underline" id="header-action">Sign in</a>
                     </div>
-                    <img class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Eric+Mensah&background=6366f1&color=fff" alt="User">
+                    <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
                 </div>
             </div>
         </header>
 
         <!-- Dashboard Grid -->
         <div class="p-8 grid grid-cols-12 gap-8">
-            
-            <!-- Left Column: Summary Stats -->
+
+            <!-- Left Column: Stats -->
             <div class="col-span-12 lg:col-span-4 space-y-8">
+
                 <!-- Overall Rating Card -->
                 <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col items-center">
                     <div class="bg-indigo-50 p-4 rounded-full mb-4">
                         <i class="fas fa-users text-indigo-500 text-2xl"></i>
                     </div>
                     <h3 class="text-gray-500 font-medium mb-1">Average Prof Rating</h3>
-                    <h2 class="text-5xl font-extrabold text-gray-800 mb-2">4.50</h2>
-                    <p class="text-sm text-gray-400 mb-4">130 Total Reviews</p>
-                    <div class="flex gap-1 text-yellow-400 mb-8">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                    <h2 id="avg-rating" class="text-5xl font-extrabold text-gray-800 mb-2">—</h2>
+                    <p id="total-reviews" class="text-sm text-gray-400 mb-4">0 Total Reviews</p>
+                    <div id="avg-stars" class="flex gap-1 text-yellow-400 mb-8">
+                        <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
                     </div>
 
                     <!-- Star Breakdown -->
-                    <div class="w-full space-y-3">
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="w-4">5</span><i class="fas fa-star text-yellow-400 text-[10px]"></i>
-                            <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full w-[87%]"></div>
-                            </div>
-                            <span class="text-gray-400 w-8 text-right">87%</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="w-4">4</span><i class="fas fa-star text-yellow-400 text-[10px]"></i>
-                            <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full w-[70%]"></div>
-                            </div>
-                            <span class="text-gray-400 w-8 text-right">70%</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="w-4">3</span><i class="fas fa-star text-yellow-400 text-[10px]"></i>
-                            <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full w-[50%]"></div>
-                            </div>
-                            <span class="text-gray-400 w-8 text-right">50%</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="w-4">2</span><i class="fas fa-star text-yellow-400 text-[10px]"></i>
-                            <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full w-[30%]"></div>
-                            </div>
-                            <span class="text-gray-400 w-8 text-right">30%</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <span class="w-4">1</span><i class="fas fa-star text-yellow-400 text-[10px]"></i>
-                            <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full w-[10%]"></div>
-                            </div>
-                            <span class="text-gray-400 w-8 text-right">10%</span>
-                        </div>
-                    </div>
+                    <div class="w-full space-y-3" id="star-breakdown"></div>
                 </div>
 
-                <!-- Qualities Card -->
-                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50">
-                    <h3 class="text-gray-800 font-bold mb-6">Common Student Feedback</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-indigo-50 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                                <span class="text-sm font-semibold text-gray-700">Clear Grading</span>
-                            </div>
-                            <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-xs font-bold">62 votes</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-green-50 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                                <span class="text-sm font-semibold text-gray-700">Engaging Lectures</span>
-                            </div>
-                            <span class="bg-green-50 text-green-600 px-3 py-1 rounded-lg text-xs font-bold">44 votes</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-orange-50 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                                <span class="text-sm font-semibold text-gray-700">Tough Exams</span>
-                            </div>
-                            <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg text-xs font-bold">25 votes</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-pink-50 text-pink-600 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                                <span class="text-sm font-semibold text-gray-700">Heavy Workload</span>
-                            </div>
-                            <span class="bg-pink-50 text-pink-600 px-3 py-1 rounded-lg text-xs font-bold">32 votes</span>
-                        </div>
+                <!-- Professors Card -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50" id="professors-section">
+                    <h3 class="text-gray-800 font-bold mb-6">Professors</h3>
+                    <div id="professors-list" class="space-y-3">
+                        <p class="text-sm text-gray-400">Loading...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Right Column: Banner + Reviews Feed -->
             <div class="col-span-12 lg:col-span-8 space-y-8">
+
                 <!-- Promo Banner -->
                 <div class="relative bg-indigo-600 rounded-[32px] p-10 overflow-hidden text-white flex justify-between items-center h-48 shadow-xl shadow-indigo-100">
                     <div class="relative z-10">
-                        <h2 class="text-3xl font-bold mb-2 tracking-tight">Faculty of the Month</h2>
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="text-lg opacity-90 font-medium">Ashesi CS Dept.</span>
-                            <span class="bg-white/20 px-3 py-0.5 rounded-full text-xs font-bold italic">5.0 Star Avg</span>
-                        </div>
-                        <div class="flex -space-x-3">
-                            <img class="w-10 h-10 rounded-full border-2 border-indigo-600 object-cover" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80">
-                            <img class="w-10 h-10 rounded-full border-2 border-indigo-600 object-cover" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80">
-                            <img class="w-10 h-10 rounded-full border-2 border-indigo-600 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80">
-                            <div class="w-10 h-10 rounded-full border-2 border-indigo-600 bg-indigo-400 flex items-center justify-center text-xs font-bold">+12</div>
-                        </div>
+                        <h2 class="text-3xl font-bold mb-2 tracking-tight">Rate Your Professors</h2>
+                        <p class="text-lg opacity-90 font-medium mb-4">Ashesi University</p>
+                        <a href="register.html" class="bg-white text-indigo-600 px-5 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition">Get Started</a>
                     </div>
-                    <!-- Decorative Circles (Abstract SVG) -->
                     <svg class="absolute right-0 top-0 opacity-20" width="300" height="300" viewBox="0 0 200 200">
                         <circle cx="150" cy="50" r="80" stroke="white" stroke-width="1" fill="none" />
                         <circle cx="160" cy="60" r="60" stroke="white" stroke-width="1" fill="none" />
@@ -236,67 +129,163 @@
                     <i class="fas fa-award text-8xl opacity-10 absolute right-12 bottom-0 transform translate-y-4"></i>
                 </div>
 
-                <!-- Reviews List Container -->
-                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 space-y-10">
-                    
-                    <!-- Review Item 1 -->
-                    <div class="flex gap-6">
-                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Student">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="font-bold text-gray-800">Cody Fisher <span class="text-gray-300 font-normal mx-2">on</span> <span class="text-indigo-600">Dr. Angela Smith</span></h4>
-                                    <p class="text-xs text-gray-400 font-medium">22 Dec, 2023</p>
-                                </div>
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                                </div>
-                            </div>
-                            <p class="text-gray-500 text-sm leading-relaxed mb-4">
-                                Dr. Angela leads the Web Dev course with a focus on real-world application. Her classes on Frontend technologies are transformative. She has a vision for students that pushes them to be better developers, reshaping their perspective on clean code.
-                            </p>
-                            <div class="flex items-center gap-6 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                                <button class="hover:text-indigo-600 transition flex items-center gap-2"><i class="far fa-comment"></i> Reply</button>
-                                <button class="hover:text-indigo-600 transition flex items-center gap-2"><i class="far fa-share-square"></i> Share</button>
-                                <div class="ml-auto flex items-center gap-2 text-gray-800">
-                                    <span class="text-sm">10</span>
-                                    <button class="bg-indigo-50 p-2 rounded-lg text-indigo-600"><i class="far fa-thumbs-up"></i></button>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Reviews Feed -->
+                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" id="reviews-section">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-gray-800 font-bold text-lg">Recent Reviews</h3>
+                        <span id="feed-count" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
                     </div>
-
-                    <!-- Review Item 2 -->
-                    <div class="flex gap-6 border-t pt-10 border-gray-50">
-                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50" src="https://i.pravatar.cc/150?u=a042581f4e290267041" alt="Student">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="font-bold text-gray-800">Arlene McCoy <span class="text-gray-300 font-normal mx-2">on</span> <span class="text-indigo-600">Prof. Kojo Baah</span></h4>
-                                    <p class="text-xs text-gray-400 font-medium">26 Oct, 2023</p>
-                                </div>
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star text-gray-200"></i>
-                                </div>
-                            </div>
-                            <p class="text-gray-500 text-sm leading-relaxed mb-4">
-                                Excellent style of teaching, however the workload in the mid-semester period is quite intense. Be prepared for weekly labs that require a deep understanding of Data Structures. Very approachable during office hours!
-                            </p>
-                            <div class="flex items-center gap-6 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                                <button class="hover:text-indigo-600 transition flex items-center gap-2"><i class="far fa-comment"></i> Reply</button>
-                                <button class="hover:text-indigo-600 transition flex items-center gap-2"><i class="far fa-share-square"></i> Share</button>
-                                <div class="ml-auto flex items-center gap-2 text-gray-800">
-                                    <span class="text-sm">16</span>
-                                    <button class="bg-indigo-50 p-2 rounded-lg text-indigo-600"><i class="far fa-thumbs-up"></i></button>
-                                </div>
-                            </div>
-                        </div>
+                    <div id="reviews-feed" class="space-y-8">
+                        <p class="text-gray-400 text-sm text-center py-8">No reviews yet.</p>
                     </div>
-
                 </div>
             </div>
         </div>
     </main>
 
+    <script>
+        const API = "http://localhost:3000";
+
+        function getUsernameFromToken(token) {
+            try {
+                return JSON.parse(atob(token.split(".")[1])).username || "User";
+            } catch { return "User"; }
+        }
+
+        function renderStars(avg) {
+            const full  = Math.floor(avg);
+            const half  = avg - full >= 0.5;
+            const empty = 5 - full - (half ? 1 : 0);
+            return '<i class="fas fa-star text-yellow-400"></i>'.repeat(full) +
+                   (half ? '<i class="fas fa-star-half-alt text-yellow-400"></i>' : '') +
+                   '<i class="far fa-star text-gray-200"></i>'.repeat(empty);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Set logged-in user info in header ──────────────────────────────
+        function initUser() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const username = getUsernameFromToken(token);
+            document.getElementById("header-username").textContent = username;
+            document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("header-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            const action = document.getElementById("header-action");
+            action.textContent = "View Profile";
+            action.removeAttribute("href");
+        }
+
+        // ── Load professors list ───────────────────────────────────────────
+        async function loadProfessors() {
+            const res = await fetch(`${API}/professors`);
+            const professors = await res.json();
+            const list = document.getElementById("professors-list");
+
+            if (professors.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-400">No professors added yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = professors.map(p => `
+                <a href="professor-profile.html?id=${p.id}"
+                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
+                    <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-chalkboard-teacher text-indigo-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600">${escapeHtml(p.name)}</p>
+                        <p class="text-xs text-gray-400">${escapeHtml(p.department)}</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
+                </a>`).join("");
+        }
+
+        // ── Load global reviews feed ──────────────────────────────────────
+        async function loadReviews() {
+            const res = await fetch(`${API}/reviews`);
+            const reviews = await res.json();
+
+            document.getElementById("feed-count").textContent =
+                `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+
+            // Compute stats
+            if (reviews.length > 0) {
+                const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                document.getElementById("avg-rating").textContent = avg.toFixed(1);
+                document.getElementById("total-reviews").textContent = `${reviews.length} Total Reviews`;
+                document.getElementById("avg-stars").innerHTML = renderStars(avg);
+                renderBreakdown(reviews);
+            }
+
+            // Render feed
+            const feed = document.getElementById("reviews-feed");
+            if (reviews.length === 0) {
+                feed.innerHTML = `<p class="text-gray-400 text-sm text-center py-8">No reviews yet — be the first!</p>`;
+                return;
+            }
+
+            feed.innerHTML = reviews.map((r, i) => {
+                const date = new Date(r.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                });
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
+                return `
+                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
+                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
+                             src="${avatarUrl}" alt="${escapeHtml(r.username)}">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-gray-800">
+                                        ${escapeHtml(r.username)}
+                                        <span class="text-gray-300 font-normal mx-2">on</span>
+                                        <a href="professor-profile.html?id=${r.professor_id}"
+                                           class="text-indigo-600 hover:underline">${escapeHtml(r.professor_name)}</a>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                </div>
+                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                            </div>
+                            <p class="text-gray-500 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        function renderBreakdown(reviews) {
+            const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+            reviews.forEach(r => counts[r.rating] = (counts[r.rating] || 0) + 1);
+            const total = reviews.length;
+            document.getElementById("star-breakdown").innerHTML = [5,4,3,2,1].map(star => {
+                const pct = total > 0 ? Math.round((counts[star] / total) * 100) : 0;
+                return `
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="w-4 text-gray-600">${star}</span>
+                        <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                        <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full" style="width:${pct}%"></div>
+                        </div>
+                        <span class="text-gray-400 w-8 text-right">${pct}%</span>
+                    </div>`;
+            }).join("");
+        }
+
+        // ── Search filter ─────────────────────────────────────────────────
+        document.getElementById("search-input").addEventListener("input", function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll("#professors-list a").forEach(el => {
+                el.style.display = el.textContent.toLowerCase().includes(q) ? "" : "none";
+            });
+        });
+
+        // ── Init ─────────────────────────────────────────────────────────
+        initUser();
+        loadProfessors();
+        loadReviews();
+    </script>
 </body>
 </html>

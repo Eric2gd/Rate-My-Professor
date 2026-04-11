@@ -130,23 +130,39 @@ app.post("/professors", authenticateToken, (req, res) => {
 });
 
 // =========================
-// GET REVIEWS (by professor)
+// GET REVIEWS
+// ?professor_id=X  → reviews for one professor
+// (no param)       → global feed (all reviews, newest first, with professor name)
 // =========================
 app.get("/reviews", (req, res) => {
   const { professor_id } = req.query;
 
-  if (!professor_id) {
-    return res.status(400).json({ message: "professor_id is required" });
+  if (professor_id) {
+    db.query(
+      `SELECT r.*, p.name AS professor_name, p.department
+       FROM reviews r
+       JOIN professors p ON r.professor_id = p.id
+       WHERE r.professor_id = ?
+       ORDER BY r.created_at DESC`,
+      [professor_id],
+      (err, results) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        res.json(results);
+      }
+    );
+  } else {
+    db.query(
+      `SELECT r.*, p.name AS professor_name, p.department
+       FROM reviews r
+       JOIN professors p ON r.professor_id = p.id
+       ORDER BY r.created_at DESC
+       LIMIT 50`,
+      (err, results) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        res.json(results);
+      }
+    );
   }
-
-  db.query(
-    "SELECT * FROM reviews WHERE professor_id = ? ORDER BY created_at DESC",
-    [professor_id],
-    (err, results) => {
-      if (err) return res.status(500).json({ message: "Database error" });
-      res.json(results);
-    }
-  );
 });
 
 // =========================
