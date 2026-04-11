@@ -130,6 +130,53 @@ app.post("/professors", authenticateToken, (req, res) => {
 });
 
 // =========================
+// GET REVIEWS (by professor)
+// =========================
+app.get("/reviews", (req, res) => {
+  const { professor_id } = req.query;
+
+  if (!professor_id) {
+    return res.status(400).json({ message: "professor_id is required" });
+  }
+
+  db.query(
+    "SELECT * FROM reviews WHERE professor_id = ? ORDER BY created_at DESC",
+    [professor_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// POST REVIEW (Protected)
+// =========================
+app.post("/reviews", authenticateToken, (req, res) => {
+  const { professor_id, review_text, rating } = req.body;
+
+  if (!professor_id || !review_text || !rating) {
+    return res.status(400).json({ message: "professor_id, review_text, and rating are required" });
+  }
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating must be between 1 and 5" });
+  }
+
+  db.query(
+    "INSERT INTO reviews (professor_id, username, review_text, rating) VALUES (?, ?, ?, ?)",
+    [professor_id, req.user.username, review_text, rating],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Error saving review" });
+      res.json({
+        message: "Review submitted",
+        review: { id: result.insertId, professor_id, username: req.user.username, review_text, rating }
+      });
+    }
+  );
+});
+
+// =========================
 // START SERVER
 // =========================
 app.listen(3000, () => {

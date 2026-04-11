@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate My Prof - Professor Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+        .sidebar-active { border-left: 3px solid #6366f1; background: #f3f4ff; color: #6366f1; }
+        .star-btn { cursor: pointer; transition: color 0.15s; }
+        .star-btn.active { color: #facc15; }
+        .star-btn:not(.active) { color: #e2e8f0; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-2">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i class="fas fa-university text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+        </div>
+
+        <nav class="flex-1 mt-4">
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 sidebar-active">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3 font-medium">Professors</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">Reviews</span>
+            </a>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Preferences</p>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-user-circle w-5"></i> <span class="ml-3">Online Profile</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-cog w-5"></i> <span class="ml-3">Account Setting</span>
+            </a>
+        </nav>
+
+        <div class="m-4 p-4 bg-indigo-600 rounded-2xl text-white">
+            <p class="text-xs font-semibold mb-1 opacity-80">Logged in as</p>
+            <p id="sidebar-username" class="text-sm font-bold truncate">—</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col">
+        <!-- Top Navigation -->
+        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+            <div class="flex items-center gap-3 text-gray-500">
+                <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <span id="breadcrumb-name" class="text-sm font-semibold text-gray-800">Professor Profile</span>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <button class="text-gray-400 hover:text-gray-600 relative">
+                    <i class="far fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-3 border-l pl-6">
+                    <div class="text-right">
+                        <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                        <p class="text-xs text-gray-400">View Profile</p>
+                    </div>
+                    <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Grid -->
+        <div class="p-8 grid grid-cols-12 gap-8">
+
+            <!-- Left Column: Professor Info + Rating Summary -->
+            <div class="col-span-12 lg:col-span-4 space-y-8">
+
+                <!-- Professor Info Card -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col items-center text-center">
+                    <img id="prof-avatar" class="w-24 h-24 rounded-full object-cover border-4 border-indigo-100 mb-4" src="" alt="Professor">
+                    <h2 id="prof-name" class="text-2xl font-extrabold text-gray-800 mb-1">Loading...</h2>
+                    <span id="prof-department" class="bg-indigo-50 text-indigo-600 px-4 py-1 rounded-full text-xs font-bold mb-4">—</span>
+                    <div class="flex gap-1 text-yellow-400 text-lg mb-1" id="prof-stars">
+                        <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                    </div>
+                    <p id="prof-avg" class="text-4xl font-extrabold text-gray-800 my-2">—</p>
+                    <p id="prof-count" class="text-sm text-gray-400">0 reviews</p>
+                </div>
+
+                <!-- Star Breakdown Card -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50">
+                    <h3 class="text-gray-800 font-bold mb-6">Rating Breakdown</h3>
+                    <div class="space-y-3" id="rating-breakdown">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Review Form + Reviews List -->
+            <div class="col-span-12 lg:col-span-8 space-y-8">
+
+                <!-- Review Submission Form -->
+                <div id="review-form-card" class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50">
+                    <h3 class="text-gray-800 font-bold text-lg mb-1">Leave a Review</h3>
+                    <p class="text-sm text-gray-400 mb-6">Share your experience with this professor.</p>
+
+                    <!-- Star Picker -->
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="text-sm font-semibold text-gray-600 mr-2">Your Rating:</span>
+                        <div id="star-picker" class="flex gap-1 text-2xl">
+                            <i class="fas fa-star star-btn" data-value="1"></i>
+                            <i class="fas fa-star star-btn" data-value="2"></i>
+                            <i class="fas fa-star star-btn" data-value="3"></i>
+                            <i class="fas fa-star star-btn" data-value="4"></i>
+                            <i class="fas fa-star star-btn" data-value="5"></i>
+                        </div>
+                        <span id="rating-label" class="text-sm text-gray-400 ml-2">Select a rating</span>
+                    </div>
+
+                    <!-- Review Text -->
+                    <textarea id="review-text" rows="4" placeholder="Write your review here..." class="w-full border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-4"></textarea>
+
+                    <div class="flex items-center justify-between">
+                        <p id="form-message" class="text-sm font-medium"></p>
+                        <button onclick="submitReview()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-semibold transition">
+                            Submit Review
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reviews List -->
+                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-gray-800 font-bold text-lg">Student Reviews</h3>
+                        <span id="reviews-count-badge" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
+                    </div>
+                    <div id="reviews-list" class="space-y-8">
+                        <p class="text-gray-400 text-sm text-center py-8">No reviews yet. Be the first!</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = "http://localhost:3000";
+        let selectedRating = 0;
+        let professorId = null;
+
+        const ratingLabels = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" };
+
+        // ── Decode JWT to get username ──────────────────────────────────────
+        function getUsernameFromToken(token) {
+            try {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                return payload.username || "User";
+            } catch {
+                return "User";
+            }
+        }
+
+        // ── Render stars (filled / half / empty) ───────────────────────────
+        function renderStars(avg) {
+            const full = Math.floor(avg);
+            const half = avg - full >= 0.5;
+            const empty = 5 - full - (half ? 1 : 0);
+            return (
+                '<i class="fas fa-star text-yellow-400"></i>'.repeat(full) +
+                (half ? '<i class="fas fa-star-half-alt text-yellow-400"></i>' : "") +
+                '<i class="far fa-star text-gray-200"></i>'.repeat(empty)
+            );
+        }
+
+        // ── Star picker interaction ─────────────────────────────────────────
+        document.querySelectorAll(".star-btn").forEach(star => {
+            star.addEventListener("click", () => {
+                selectedRating = parseInt(star.dataset.value);
+                document.querySelectorAll(".star-btn").forEach(s => {
+                    s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+                });
+                document.getElementById("rating-label").textContent = ratingLabels[selectedRating] || "";
+            });
+        });
+
+        // ── Load professor info ─────────────────────────────────────────────
+        async function loadProfessor(id) {
+            const res = await fetch(`${API}/professors`);
+            const professors = await res.json();
+            const prof = professors.find(p => p.id == id);
+
+            if (!prof) {
+                document.getElementById("prof-name").textContent = "Professor not found";
+                return;
+            }
+
+            const initials = prof.name.split(" ").map(w => w[0]).join("+");
+            document.getElementById("prof-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.name)}&background=6366f1&color=fff&size=128`;
+            document.getElementById("prof-name").textContent = prof.name;
+            document.getElementById("prof-department").textContent = prof.department;
+            document.getElementById("breadcrumb-name").textContent = prof.name;
+            document.title = `${prof.name} - Rate My Prof`;
+        }
+
+        // ── Load & render reviews ───────────────────────────────────────────
+        async function loadReviews(id) {
+            const res = await fetch(`${API}/reviews?professor_id=${id}`);
+            const reviews = await res.json();
+
+            // Update count badge
+            document.getElementById("reviews-count-badge").textContent =
+                `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+            document.getElementById("prof-count").textContent =
+                `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+
+            // Compute average
+            if (reviews.length > 0) {
+                const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                document.getElementById("prof-avg").textContent = avg.toFixed(1);
+                document.getElementById("prof-stars").innerHTML = renderStars(avg);
+                renderBreakdown(reviews);
+            } else {
+                document.getElementById("prof-avg").textContent = "N/A";
+                document.getElementById("rating-breakdown").innerHTML =
+                    `<p class="text-sm text-gray-400">No ratings yet.</p>`;
+            }
+
+            // Render review list
+            const list = document.getElementById("reviews-list");
+            if (reviews.length === 0) {
+                list.innerHTML = `<p class="text-gray-400 text-sm text-center py-8">No reviews yet. Be the first!</p>`;
+                return;
+            }
+
+            list.innerHTML = reviews.map((r, i) => {
+                const date = new Date(r.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                });
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
+                return `
+                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
+                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
+                             src="${avatarUrl}" alt="${r.username}">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-gray-800">${escapeHtml(r.username)}</h4>
+                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                </div>
+                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                            </div>
+                            <p class="text-gray-500 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        // ── Render rating breakdown bars ────────────────────────────────────
+        function renderBreakdown(reviews) {
+            const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            reviews.forEach(r => counts[r.rating] = (counts[r.rating] || 0) + 1);
+            const total = reviews.length;
+
+            document.getElementById("rating-breakdown").innerHTML = [5, 4, 3, 2, 1].map(star => {
+                const pct = total > 0 ? Math.round((counts[star] / total) * 100) : 0;
+                return `
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="w-4 text-gray-600">${star}</span>
+                        <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                        <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full" style="width:${pct}%"></div>
+                        </div>
+                        <span class="text-gray-400 w-8 text-right">${pct}%</span>
+                    </div>`;
+            }).join("");
+        }
+
+        // ── Submit review ───────────────────────────────────────────────────
+        async function submitReview() {
+            const token = localStorage.getItem("token");
+            const msg = document.getElementById("form-message");
+
+            if (!token) {
+                msg.textContent = "You must be logged in to submit a review.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+            if (selectedRating === 0) {
+                msg.textContent = "Please select a star rating.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+            const reviewText = document.getElementById("review-text").value.trim();
+            if (!reviewText) {
+                msg.textContent = "Please write a review before submitting.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+
+            const res = await fetch(`${API}/reviews`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    professor_id: professorId,
+                    review_text: reviewText,
+                    rating: selectedRating
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                msg.textContent = "Review submitted!";
+                msg.className = "text-sm font-medium text-green-600";
+                document.getElementById("review-text").value = "";
+                selectedRating = 0;
+                document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
+                document.getElementById("rating-label").textContent = "Select a rating";
+                loadReviews(professorId);
+            } else {
+                msg.textContent = data.message || "Failed to submit review.";
+                msg.className = "text-sm font-medium text-red-500";
+            }
+        }
+
+        // ── XSS protection ──────────────────────────────────────────────────
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        // ── Init ────────────────────────────────────────────────────────────
+        (function init() {
+            const params = new URLSearchParams(window.location.search);
+            professorId = params.get("id");
+
+            if (!professorId) {
+                document.getElementById("prof-name").textContent = "No professor selected.";
+                return;
+            }
+
+            // Set header username from token
+            const token = localStorage.getItem("token");
+            if (token) {
+                const username = getUsernameFromToken(token);
+                document.getElementById("header-username").textContent = username;
+                document.getElementById("sidebar-username").textContent = username;
+                document.getElementById("header-avatar").src =
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            }
+
+            loadProfessor(professorId);
+            loadReviews(professorId);
+        })();
+    </script>
+</body>
+</html>
