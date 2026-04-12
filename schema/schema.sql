@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 12, 2026 at 02:00 AM
+-- Generation Time: Apr 12, 2026 at 03:28 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -56,6 +56,13 @@ CREATE TABLE `replies` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `replies`
+--
+
+INSERT INTO `replies` (`id`, `review_id`, `username`, `reply_text`, `created_at`) VALUES
+(1, 1, 'Eric', 'wait eric can reply now?', '2026-04-12 01:18:18');
+
 -- --------------------------------------------------------
 
 --
@@ -89,17 +96,17 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `profile_picture` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `profile_picture` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password`, `profile_picture`, `created_at`) VALUES
-(1, 'Eric', '$2b$10$2HoEM9pwXYO2MCBCYTfHEObEMYOFe4sTONDBryh01TcH55DO4/mMe', NULL, '2026-04-11 12:56:28'),
-(2, 'Dicey', '$2b$10$1knM3R5PIJ6LAY5J.RvElO9sgAW0yXRqzevXb4SypjmGLXOCHITXO', NULL, '2026-04-11 23:25:45');
+INSERT INTO `users` (`id`, `username`, `password`, `created_at`, `profile_picture`) VALUES
+(1, 'Eric', '$2b$10$2HoEM9pwXYO2MCBCYTfHEObEMYOFe4sTONDBryh01TcH55DO4/mMe', '2026-04-11 12:56:28', NULL),
+(2, 'Dicey', '$2b$10$eOyQB.koe1nhaimhAqfbBudp2jiTizxkw89wtztK.G7vkG7RiTWw.', '2026-04-12 00:35:56', NULL);
 
 --
 -- Indexes for dumped tables
@@ -146,7 +153,7 @@ ALTER TABLE `professors`
 -- AUTO_INCREMENT for table `replies`
 --
 ALTER TABLE `replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `reviews`
