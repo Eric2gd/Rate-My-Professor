@@ -1,187 +1,138 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Apr 12, 2026 at 03:28 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.1.25
+-- phpMyAdmin SQL Dump (updated)
+-- Database: `rate_my_professor`
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `rate_my_professor`
---
-
+-- --------------------------------------------------------
+-- Table: departments
+-- Used to group professors and compute per-department avg ratings
 -- --------------------------------------------------------
 
---
--- Table structure for table `professors`
---
+CREATE TABLE `departments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `departments` (`name`) VALUES
+('Engineering'),
+('Computer Science');
+
+-- --------------------------------------------------------
+-- Table: professors
+-- profile_picture stores the filename/path set by an admin via DB
+-- department_id links to departments table
+-- --------------------------------------------------------
 
 CREATE TABLE `professors` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) DEFAULT NULL,
   `name` varchar(100) NOT NULL,
-  `department` varchar(100) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `profile_picture` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_professors_department_id` (`department_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `professors`
---
-
-INSERT INTO `professors` (`id`, `name`, `department`, `created_at`) VALUES
-(1, 'Dr. Nathan Amanquah', 'Engineering', '2026-04-11 13:34:03'),
-(2, 'Dr. Ayorkor Korsah', 'Computer Science', '2026-04-11 13:35:04');
+INSERT INTO `professors` (`department_id`, `name`, `profile_picture`, `created_at`) VALUES
+(1, 'Dr. Nathan Amanquah',  NULL, '2026-04-11 13:34:03'),
+(2, 'Dr. Ayorkor Korsah',   NULL, '2026-04-11 13:35:04');
 
 -- --------------------------------------------------------
+-- Table: users
+-- profile_picture stores the path of the user-uploaded image
+-- e.g. 'uploads/profile_pictures/eric_avatar.jpg'
+-- --------------------------------------------------------
 
---
--- Table structure for table `replies`
---
-
-CREATE TABLE `replies` (
-  `id` int(11) NOT NULL,
-  `review_id` int(11) NOT NULL,
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
-  `reply_text` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `password` varchar(255) NOT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `replies`
---
-
-INSERT INTO `replies` (`id`, `review_id`, `username`, `reply_text`, `created_at`) VALUES
-(1, 1, 'Eric', 'wait eric can reply now?', '2026-04-12 01:18:18');
+INSERT INTO `users` (`username`, `password`, `profile_picture`, `created_at`) VALUES
+('Eric',  '$2b$10$2HoEM9pwXYO2MCBCYTfHEObEMYOFe4sTONDBryh01TcH55DO4/mMe', NULL, '2026-04-11 12:56:28'),
+('Dicey', '$2b$10$1knM3R5PIJ6LAY5J.RvElO9sgAW0yXRqzevXb4SypjmGLXOCHITXO', NULL, '2026-04-11 23:25:45');
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `reviews`
---
+-- Table: reviews
+-- Explicit named index on professor_id for fast lookups
+-- --------------------------------------------------------
 
 CREATE TABLE `reviews` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `professor_id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `review_text` text NOT NULL,
-  `rating` int(11) DEFAULT NULL CHECK (`rating` between 1 and 5),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `rating` int(11) DEFAULT NULL CHECK (`rating` BETWEEN 1 AND 5),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_reviews_professor_id` (`professor_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `reviews`
---
-
-INSERT INTO `reviews` (`id`, `professor_id`, `username`, `review_text`, `rating`, `created_at`) VALUES
-(1, 1, 'Eric', 'WOOW... what a great guy', 5, '2026-04-11 13:38:07'),
-(2, 2, 'Eric', 'I like her glasses', 4, '2026-04-11 19:14:29');
+INSERT INTO `reviews` (`professor_id`, `username`, `review_text`, `rating`, `created_at`) VALUES
+(1, 'Eric', 'WOOW... what a great guy', 5, '2026-04-11 13:38:07'),
+(2, 'Eric', 'I like her glasses',       4, '2026-04-11 19:14:29');
 
 -- --------------------------------------------------------
+-- Table: replies
+-- Explicit named index on review_id for fast lookups
+-- --------------------------------------------------------
 
---
--- Table structure for table `users`
---
-
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
+CREATE TABLE `replies` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `review_id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
+  `reply_text` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `profile_picture` varchar(255) DEFAULT NULL
+  PRIMARY KEY (`id`),
+  KEY `idx_replies_review_id` (`review_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `users`
---
+-- --------------------------------------------------------
+-- Foreign key constraints
+-- --------------------------------------------------------
 
-INSERT INTO `users` (`id`, `username`, `password`, `created_at`, `profile_picture`) VALUES
-(1, 'Eric', '$2b$10$2HoEM9pwXYO2MCBCYTfHEObEMYOFe4sTONDBryh01TcH55DO4/mMe', '2026-04-11 12:56:28', NULL),
-(2, 'Dicey', '$2b$10$eOyQB.koe1nhaimhAqfbBudp2jiTizxkw89wtztK.G7vkG7RiTWw.', '2026-04-12 00:35:56', NULL);
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `professors`
---
 ALTER TABLE `professors`
-  ADD PRIMARY KEY (`id`);
+  ADD CONSTRAINT `professors_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL;
 
---
--- Indexes for table `replies`
---
-ALTER TABLE `replies`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `review_id` (`review_id`);
-
---
--- Indexes for table `reviews`
---
 ALTER TABLE `reviews`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `professor_id` (`professor_id`);
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`professor_id`) REFERENCES `professors` (`id`);
 
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `professors`
---
-ALTER TABLE `professors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `replies`
---
-ALTER TABLE `replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `reviews`
---
-ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `replies`
---
 ALTER TABLE `replies`
   ADD CONSTRAINT `replies_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`);
 
---
--- Constraints for table `reviews`
---
-ALTER TABLE `reviews`
-  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`professor_id`) REFERENCES `professors` (`id`);
+-- --------------------------------------------------------
+-- View: department_avg_ratings
+-- Gives average rating per department across all professors
+-- Usage: SELECT * FROM department_avg_ratings;
+--        SELECT * FROM department_avg_ratings WHERE department = 'Engineering';
+-- --------------------------------------------------------
+
+CREATE OR REPLACE VIEW `department_avg_ratings` AS
+SELECT
+  d.id              AS department_id,
+  d.name            AS department,
+  COUNT(r.id)       AS total_reviews,
+  ROUND(AVG(r.rating), 2) AS avg_rating
+FROM departments d
+LEFT JOIN professors p ON p.department_id = d.id
+LEFT JOIN reviews r    ON r.professor_id  = p.id
+GROUP BY d.id, d.name;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
