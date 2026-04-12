@@ -245,18 +245,47 @@
                 });
                 const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 return `
-                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
-                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
-                             src="${avatarUrl}" alt="${r.username}">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="font-bold text-gray-800">${escapeHtml(r.username)}</h4>
-                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""}">
+                        <div class="flex gap-6">
+                            <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
+                                 src="${avatarUrl}" alt="${escapeHtml(r.username)}">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-bold text-gray-800">${escapeHtml(r.username)}</h4>
+                                        <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                    </div>
+                                    <div class="flex text-sm">${renderStars(r.rating)}</div>
                                 </div>
-                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                                <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
+
+                                <!-- Reply actions -->
+                                <div class="flex items-center gap-4 text-xs font-semibold text-gray-400">
+                                    <button onclick="toggleReplies(${r.id})"
+                                        class="flex items-center gap-1 hover:text-indigo-600 transition">
+                                        <i class="far fa-comment"></i>
+                                        <span id="reply-count-${r.id}">Replies</span>
+                                    </button>
+                                    <button onclick="toggleReplyBox(${r.id})"
+                                        class="flex items-center gap-1 hover:text-indigo-600 transition">
+                                        <i class="fas fa-reply text-[10px]"></i> Reply
+                                    </button>
+                                </div>
+
+                                <!-- Reply input box (hidden by default) -->
+                                <div id="reply-box-${r.id}" class="hidden mt-3 flex gap-2">
+                                    <input id="reply-input-${r.id}" type="text" placeholder="Write a reply..."
+                                        class="flex-1 px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <button onclick="submitReply(${r.id})"
+                                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                                        Post
+                                    </button>
+                                </div>
+                                <p id="reply-msg-${r.id}" class="text-xs mt-1 min-h-[16px]"></p>
+
+                                <!-- Replies list (hidden by default) -->
+                                <div id="replies-${r.id}" class="hidden mt-4 space-y-3 pl-2 border-l-2 border-indigo-50"></div>
                             </div>
-                            <p class="text-gray-500 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
                         </div>
                     </div>`;
             }).join("");
@@ -330,6 +359,96 @@
             } else {
                 msg.textContent = data.message || "Failed to submit review.";
                 msg.className = "text-sm font-medium text-red-500";
+            }
+        }
+
+        // ── Replies ─────────────────────────────────────────────────────────
+        async function toggleReplies(reviewId) {
+            const container = document.getElementById(`replies-${reviewId}`);
+            if (!container.classList.contains("hidden")) {
+                container.classList.add("hidden");
+                return;
+            }
+            container.classList.remove("hidden");
+            container.innerHTML = `<p class="text-xs text-gray-400">Loading...</p>`;
+
+            const res = await fetch(`${API}/replies?review_id=${reviewId}`);
+            const replies = await res.json();
+
+            document.getElementById(`reply-count-${reviewId}`).textContent =
+                `${replies.length} repl${replies.length !== 1 ? "ies" : "y"}`;
+
+            if (replies.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400">No replies yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = replies.map(rp => {
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
+                const date = new Date(rp.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                });
+                return `
+                    <div class="flex gap-3 items-start">
+                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
+                        <div>
+                            <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
+                            <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(rp.reply_text)}</p>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        function toggleReplyBox(reviewId) {
+            const box = document.getElementById(`reply-box-${reviewId}`);
+            box.classList.toggle("hidden");
+            if (!box.classList.contains("hidden")) {
+                document.getElementById(`reply-input-${reviewId}`).focus();
+            }
+        }
+
+        async function submitReply(reviewId) {
+            const token = localStorage.getItem("token");
+            const input = document.getElementById(`reply-input-${reviewId}`);
+            const msg = document.getElementById(`reply-msg-${reviewId}`);
+            const replyText = input.value.trim();
+
+            if (!token) {
+                msg.textContent = "You must be logged in to reply.";
+                msg.className = "text-xs mt-1 text-red-500";
+                return;
+            }
+            if (!replyText) {
+                msg.textContent = "Reply cannot be empty.";
+                msg.className = "text-xs mt-1 text-red-500";
+                return;
+            }
+
+            const res = await fetch(`${API}/replies`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ review_id: reviewId, reply_text: replyText })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                input.value = "";
+                msg.textContent = "Reply posted!";
+                msg.className = "text-xs mt-1 text-green-600";
+                document.getElementById(`reply-box-${reviewId}`).classList.add("hidden");
+                // Reload replies to show the new one
+                const repliesContainer = document.getElementById(`replies-${reviewId}`);
+                if (!repliesContainer.classList.contains("hidden")) {
+                    await toggleReplies(reviewId); // close
+                }
+                await toggleReplies(reviewId); // reopen with fresh data
+                setTimeout(() => { msg.textContent = ""; }, 3000);
+            } else {
+                msg.textContent = data.message || "Failed to post reply.";
+                msg.className = "text-xs mt-1 text-red-500";
             }
         }
 

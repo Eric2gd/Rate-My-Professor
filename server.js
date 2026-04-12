@@ -193,6 +193,46 @@ app.post("/reviews", authenticateToken, (req, res) => {
 });
 
 // =========================
+// GET REPLIES (by review)
+// =========================
+app.get("/replies", (req, res) => {
+  const { review_id } = req.query;
+  if (!review_id) return res.status(400).json({ message: "review_id is required" });
+
+  db.query(
+    "SELECT * FROM replies WHERE review_id = ? ORDER BY created_at ASC",
+    [review_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// POST REPLY (Protected)
+// =========================
+app.post("/replies", authenticateToken, (req, res) => {
+  const { review_id, reply_text } = req.body;
+
+  if (!review_id || !reply_text) {
+    return res.status(400).json({ message: "review_id and reply_text are required" });
+  }
+
+  db.query(
+    "INSERT INTO replies (review_id, username, reply_text) VALUES (?, ?, ?)",
+    [review_id, req.user.username, reply_text],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Error saving reply" });
+      res.json({
+        message: "Reply posted",
+        reply: { id: result.insertId, review_id, username: req.user.username, reply_text }
+      });
+    }
+  );
+});
+
+// =========================
 // START SERVER
 // =========================
 app.listen(3000, () => {
