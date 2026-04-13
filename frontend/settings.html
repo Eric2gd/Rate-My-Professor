@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate My Prof - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-2">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i class="fas fa-university text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+        </div>
+
+        <nav class="flex-1 mt-4">
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+            </a>
+            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            </a>
+            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
+            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            </a>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <div id="nav-guest">
+                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                </a>
+                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                </a>
+            </div>
+            <div id="nav-loggedin" class="hidden">
+                <a href="settings.html" class="flex items-center px-6 py-3 sidebar-active">
+                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate font-medium">Profile</span>
+                </a>
+                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
+            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+            <div class="flex items-center gap-3 text-gray-500">
+                <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <span class="text-sm font-semibold text-gray-800">Settings</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                    <span class="text-xs text-gray-400">Account Settings</span>
+                </div>
+                <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100"
+                     src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="p-8 max-w-2xl w-full">
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-gray-800">Account Settings</h1>
+                <p class="text-sm text-gray-400 mt-1">Manage your profile and account preferences.</p>
+            </div>
+
+            <!-- Profile Picture -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6">
+                <h2 class="text-base font-bold text-gray-800 mb-1">Profile Picture</h2>
+                <p class="text-xs text-gray-400 mb-6">This appears next to your reviews and ratings.</p>
+                <div class="flex items-center gap-6">
+                    <div class="relative">
+                        <img id="settings-avatar" class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100"
+                             src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Your avatar">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                            <i class="fas fa-upload text-xs"></i> Upload new picture
+                            <input id="pic-input" type="file" accept="image/*" class="hidden" onchange="uploadPicture(this)">
+                        </label>
+                        <p id="pic-msg" class="text-xs min-h-[16px]"></p>
+                        <p class="text-xs text-gray-400">JPG, PNG or GIF · Max 2 MB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6">
+                <h2 class="text-base font-bold text-gray-800 mb-1">Account Info</h2>
+                <p class="text-xs text-gray-400 mb-6">Your username is how you appear on reviews.</p>
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold text-gray-700">Username</label>
+                    <input id="settings-username" type="text" readonly
+                           class="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-sm cursor-not-allowed focus:outline-none">
+                    <p class="text-xs text-gray-400 mt-1">Username cannot be changed.</p>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6">
+                <h2 class="text-base font-bold text-gray-800 mb-1">Change Password</h2>
+                <p class="text-xs text-gray-400 mb-6">Use a strong password you don't use elsewhere.</p>
+                <div class="space-y-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold text-gray-700">Current Password</label>
+                        <input id="current-password" type="password" placeholder="Enter current password"
+                               class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold text-gray-700">New Password</label>
+                        <input id="new-password" type="password" placeholder="Enter new password"
+                               class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="changePassword()"
+                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                            Update Password
+                        </button>
+                        <p id="pw-msg" class="text-sm font-medium min-h-[20px]"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-red-50 mb-6">
+                <h2 class="text-base font-bold text-gray-800 mb-1">Danger Zone</h2>
+                <p class="text-xs text-gray-400 mb-6">These actions are permanent and cannot be undone.</p>
+                <div class="flex items-center gap-4">
+                    <button onclick="logout()"
+                            class="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
+                        <i class="fas fa-sign-out-alt text-xs"></i> Log Out
+                    </button>
+                    <button onclick="confirmDelete()"
+                            class="flex items-center gap-2 px-5 py-2.5 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold rounded-xl transition">
+                        <i class="fas fa-trash text-xs"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = "http://localhost:3000";
+
+        function getUsernameFromToken(token) {
+            try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
+            catch { return "User"; }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
+
+        async function initUser() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+            const username = getUsernameFromToken(token);
+
+            document.getElementById("header-username").textContent = username;
+            document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("nav-username").textContent = username;
+            document.getElementById("settings-username").value = username;
+            document.getElementById("nav-guest").classList.add("hidden");
+            document.getElementById("nav-loggedin").classList.remove("hidden");
+
+            try {
+                const res = await fetch(`${API}/users/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    const src = user.profile_picture
+                        ? `${API}/${user.profile_picture}`
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+                    document.getElementById("header-avatar").src = src;
+                    document.getElementById("settings-avatar").src = src;
+                }
+            } catch {}
+        }
+
+        async function uploadPicture(input) {
+            const token = localStorage.getItem("token");
+            if (!token || !input.files[0]) return;
+
+            const form = new FormData();
+            form.append("picture", input.files[0]);
+
+            const msg = document.getElementById("pic-msg");
+            msg.textContent = "Uploading...";
+            msg.className = "text-xs text-gray-400";
+
+            const res = await fetch(`${API}/users/profile-picture`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: form
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const src = `${API}/${data.profile_picture}`;
+                document.getElementById("settings-avatar").src = src;
+                document.getElementById("header-avatar").src = src;
+                msg.textContent = "Picture updated!";
+                msg.className = "text-xs text-green-600";
+            } else {
+                msg.textContent = data.message || "Upload failed.";
+                msg.className = "text-xs text-red-500";
+            }
+        }
+
+        async function changePassword() {
+            const token = localStorage.getItem("token");
+            const current = document.getElementById("current-password").value.trim();
+            const next = document.getElementById("new-password").value.trim();
+            const msg = document.getElementById("pw-msg");
+
+            if (!current || !next) {
+                msg.textContent = "Please fill in both fields.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+
+            const res = await fetch(`${API}/users/password`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ current_password: current, new_password: next })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msg.textContent = "Password updated!";
+                msg.className = "text-sm font-medium text-green-600";
+                document.getElementById("current-password").value = "";
+                document.getElementById("new-password").value = "";
+            } else {
+                msg.textContent = data.message || "Failed to update password.";
+                msg.className = "text-sm font-medium text-red-500";
+            }
+        }
+
+        async function confirmDelete() {
+            if (!confirm("Are you sure you want to delete your account? This cannot be undone.")) return;
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API}/users/me`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                window.location.href = "register.html";
+            } else {
+                alert("Failed to delete account.");
+            }
+        }
+
+        initUser();
+    </script>
+</body>
+</html>

@@ -3,10 +3,40 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const mysql = require("mysql2");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve uploaded files as static assets
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Multer: save profile pictures to uploads/profile_pictures/
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, "uploads", "profile_pictures");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const tag = req.user ? req.user.username : (req.params.id || "prof");
+    cb(null, `${Date.now()}_${tag}${ext}`);
+  }
+});
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Images only"));
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: 2 * 1024 * 1024 } // 2 MB
+});
 
 const SECRET = "mysecretkey";
 
@@ -145,10 +175,12 @@ app.get("/reviews", (req, res) => {
 
   if (professor_id) {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
+       LEFT JOIN users u ON r.username = u.username
        WHERE r.professor_id = ?
        ORDER BY r.created_at DESC`,
       [professor_id],
@@ -159,10 +191,12 @@ app.get("/reviews", (req, res) => {
     );
   } else {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
+       LEFT JOIN users u ON r.username = u.username
        ORDER BY r.created_at DESC
        LIMIT 50`,
       (err, results) => {
@@ -201,6 +235,66 @@ app.post("/reviews", authenticateToken, (req, res) => {
 });
 
 // =========================
+// GET MY REVIEWS (Protected)
+// =========================
+app.get("/reviews/mine", authenticateToken, (req, res) => {
+  db.query(
+    `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+     FROM reviews r
+     JOIN professors p ON r.professor_id = p.id
+     LEFT JOIN departments d ON p.department_id = d.id
+     WHERE r.username = ?
+     ORDER BY r.created_at DESC`,
+    [req.user.username],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// EDIT REVIEW (Protected, owner only)
+// =========================
+app.put("/reviews/:id", authenticateToken, (req, res) => {
+  const { review_text, rating } = req.body;
+  if (!review_text || !rating) {
+    return res.status(400).json({ message: "review_text and rating are required" });
+  }
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating must be between 1 and 5" });
+  }
+  db.query(
+    "UPDATE reviews SET review_text = ?, rating = ? WHERE id = ? AND username = ?",
+    [review_text, rating, req.params.id, req.user.username],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Review not found or not yours" });
+      }
+      res.json({ message: "Review updated" });
+    }
+  );
+});
+
+// =========================
+// DELETE REVIEW (Protected, owner only)
+// =========================
+app.delete("/reviews/:id", authenticateToken, (req, res) => {
+  db.query(
+    "DELETE FROM reviews WHERE id = ? AND username = ?",
+    [req.params.id, req.user.username],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Review not found or not yours" });
+      }
+      res.json({ message: "Review deleted" });
+    }
+  );
+});
+
+// =========================
 // GET REPLIES (by review)
 // =========================
 app.get("/replies", (req, res) => {
@@ -208,7 +302,11 @@ app.get("/replies", (req, res) => {
   if (!review_id) return res.status(400).json({ message: "review_id is required" });
 
   db.query(
-    "SELECT * FROM replies WHERE review_id = ? ORDER BY created_at ASC",
+    `SELECT rp.*, u.profile_picture AS user_picture
+     FROM replies rp
+     LEFT JOIN users u ON rp.username = u.username
+     WHERE rp.review_id = ?
+     ORDER BY rp.created_at ASC`,
     [review_id],
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
@@ -236,6 +334,86 @@ app.post("/replies", authenticateToken, (req, res) => {
         message: "Reply posted",
         reply: { id: result.insertId, review_id, username: req.user.username, reply_text }
       });
+    }
+  );
+});
+
+// =========================
+// CHANGE PASSWORD (Protected)
+// =========================
+app.put("/users/password", authenticateToken, async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ message: "current_password and new_password are required" });
+  }
+  db.query("SELECT * FROM users WHERE username = ?", [req.user.username], async (err, results) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (results.length === 0) return res.status(404).json({ message: "User not found" });
+    const isMatch = await bcrypt.compare(current_password, results[0].password);
+    if (!isMatch) return res.status(400).json({ message: "Current password is incorrect" });
+    const hashed = await bcrypt.hash(new_password, 10);
+    db.query("UPDATE users SET password = ? WHERE username = ?", [hashed, req.user.username], (err2) => {
+      if (err2) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Password updated successfully" });
+    });
+  });
+});
+
+// =========================
+// DELETE ACCOUNT (Protected)
+// =========================
+app.delete("/users/me", authenticateToken, (req, res) => {
+  db.query("DELETE FROM users WHERE username = ?", [req.user.username], (err) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    res.json({ message: "Account deleted" });
+  });
+});
+
+// =========================
+// GET CURRENT USER (me)
+// =========================
+app.get("/users/me", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT id, username, profile_picture, created_at FROM users WHERE username = ?",
+    [req.user.username],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (results.length === 0) return res.status(404).json({ message: "User not found" });
+      res.json(results[0]);
+    }
+  );
+});
+
+// =========================
+// UPLOAD USER PROFILE PICTURE (Protected)
+// =========================
+app.post("/users/profile-picture", authenticateToken, upload.single("picture"), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+  const picturePath = "uploads/profile_pictures/" + req.file.filename;
+
+  db.query(
+    "UPDATE users SET profile_picture = ? WHERE username = ?",
+    [picturePath, req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Profile picture updated", profile_picture: picturePath });
+    }
+  );
+});
+
+// =========================
+// UPLOAD PROFESSOR PICTURE (Protected)
+// =========================
+app.post("/professors/:id/profile-picture", authenticateToken, upload.single("picture"), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+  const picturePath = "uploads/profile_pictures/" + req.file.filename;
+
+  db.query(
+    "UPDATE professors SET profile_picture = ? WHERE id = ?",
+    [picturePath, req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Professor picture updated", profile_picture: picturePath });
     }
   );
 });
