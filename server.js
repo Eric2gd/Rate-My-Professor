@@ -107,24 +107,30 @@ function authenticateToken(req, res, next) {
 // GET PROFESSORS
 // =========================
 app.get("/professors", (req, res) => {
-  db.query("SELECT * FROM professors", (err, results) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    res.json(results);
-  });
+  db.query(
+    `SELECT p.id, p.name, p.profile_picture, p.created_at,
+            COALESCE(d.name, 'Unknown') AS department
+     FROM professors p
+     LEFT JOIN departments d ON p.department_id = d.id`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
 });
 
 // =========================
 // POST PROFESSOR (Protected)
 // =========================
 app.post("/professors", authenticateToken, (req, res) => {
-  const { name, department } = req.body;
+  const { name, department_id } = req.body;
 
-  db.query("INSERT INTO professors (name, department) VALUES (?, ?)", [name, department], (err, result) => {
+  db.query("INSERT INTO professors (name, department_id) VALUES (?, ?)", [name, department_id], (err, result) => {
     if (err) return res.status(500).json({ message: "Error adding professor" });
 
     res.json({
       message: "Professor added",
-      professor: { id: result.insertId, name, department }
+      professor: { id: result.insertId, name, department_id }
     });
   });
 });
@@ -139,9 +145,10 @@ app.get("/reviews", (req, res) => {
 
   if (professor_id) {
     db.query(
-      `SELECT r.*, p.name AS professor_name, p.department
+      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
+       LEFT JOIN departments d ON p.department_id = d.id
        WHERE r.professor_id = ?
        ORDER BY r.created_at DESC`,
       [professor_id],
@@ -152,9 +159,10 @@ app.get("/reviews", (req, res) => {
     );
   } else {
     db.query(
-      `SELECT r.*, p.name AS professor_name, p.department
+      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
+       LEFT JOIN departments d ON p.department_id = d.id
        ORDER BY r.created_at DESC
        LIMIT 50`,
       (err, results) => {
