@@ -28,6 +28,9 @@
             <a href="#" onclick="scrollTo('professors-section')" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                 <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
             </a>
+            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
             <a href="#" onclick="scrollTo('reviews-section')" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                 <i class="fas fa-star w-5"></i> <span class="ml-3">Reviews</span>
             </a>
@@ -113,11 +116,35 @@
                     <div class="w-full space-y-3" id="star-breakdown"></div>
                 </div>
 
-                <!-- Professors Card -->
+                <!-- Departments + Professors Card -->
                 <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50" id="professors-section">
-                    <h3 class="text-gray-800 font-bold mb-6">Professors</h3>
-                    <div id="professors-list" class="space-y-3">
-                        <p class="text-sm text-gray-400">Loading...</p>
+                    <!-- Tabs -->
+                    <div class="flex gap-2 mb-6">
+                        <button id="tab-dept" onclick="switchTab('dept')"
+                            class="px-4 py-1.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white transition">
+                            Departments
+                        </button>
+                        <button id="tab-profs" onclick="switchTab('profs')"
+                            class="px-4 py-1.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                            All Professors
+                        </button>
+                    </div>
+
+                    <!-- Departments view -->
+                    <div id="view-dept">
+                        <div id="departments-list" class="space-y-3">
+                            <p class="text-sm text-gray-400">Loading...</p>
+                        </div>
+                        <a href="departments.html" class="mt-4 flex items-center gap-1 text-xs text-indigo-500 font-semibold hover:underline">
+                            View all departments <i class="fas fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+
+                    <!-- All professors view (hidden by default) -->
+                    <div id="view-profs" class="hidden">
+                        <div id="professors-list" class="space-y-3">
+                            <p class="text-sm text-gray-400">Loading...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -206,6 +233,15 @@
             document.getElementById(id).scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
+        // ── Tab switcher ──────────────────────────────────────────────────
+        function switchTab(tab) {
+            const isDept = tab === 'dept';
+            document.getElementById("view-dept").classList.toggle("hidden", !isDept);
+            document.getElementById("view-profs").classList.toggle("hidden", isDept);
+            document.getElementById("tab-dept").className = `px-4 py-1.5 rounded-xl text-sm font-semibold transition ${isDept ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`;
+            document.getElementById("tab-profs").className = `px-4 py-1.5 rounded-xl text-sm font-semibold transition ${!isDept ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`;
+        }
+
         // ── Load professors list ───────────────────────────────────────────
         async function loadProfessors() {
             const res = await fetch(`${API}/professors`);
@@ -214,7 +250,7 @@
 
             if (professors.length === 0) {
                 list.innerHTML = `<p class="text-sm text-gray-400">No professors added yet.</p>`;
-                return;
+                return professors;
             }
 
             list.innerHTML = professors.map(p => `
@@ -229,6 +265,44 @@
                     </div>
                     <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
                 </a>`).join("");
+            return professors;
+        }
+
+        // ── Load departments view ─────────────────────────────────────────
+        async function loadDepartments(professors, reviews) {
+            const deptMap = {};
+            professors.forEach(p => {
+                if (!deptMap[p.department]) deptMap[p.department] = { professors: [], ratings: [] };
+                deptMap[p.department].professors.push(p);
+            });
+            reviews.forEach(r => {
+                const prof = professors.find(p => p.id === r.professor_id);
+                if (prof && deptMap[prof.department]) deptMap[prof.department].ratings.push(r.rating);
+            });
+
+            const list = document.getElementById("departments-list");
+            const depts = Object.entries(deptMap);
+            if (depts.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-400">No departments yet.</p>`;
+                return;
+            }
+            list.innerHTML = depts.map(([name, data]) => {
+                const avg = data.ratings.length
+                    ? (data.ratings.reduce((s, r) => s + r, 0) / data.ratings.length).toFixed(1)
+                    : "N/A";
+                return `
+                    <a href="departments.html?dept=${encodeURIComponent(name)}"
+                       class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
+                        <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-building text-indigo-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600">${escapeHtml(name)}</p>
+                            <p class="text-xs text-gray-400">${data.professors.length} professor${data.professors.length !== 1 ? "s" : ""} · ⭐ ${avg}</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
+                    </a>`;
+            }).join("");
         }
 
         // ── Load global reviews feed ──────────────────────────────────────
@@ -281,6 +355,7 @@
                         </div>
                     </div>`;
             }).join("");
+            return reviews;
         }
 
         function renderBreakdown(reviews) {
@@ -311,8 +386,9 @@
 
         // ── Init ─────────────────────────────────────────────────────────
         initUser();
-        loadProfessors();
-        loadReviews();
+        Promise.all([loadProfessors(), loadReviews()]).then(([professors, reviews]) => {
+            if (professors && reviews) loadDepartments(professors, reviews);
+        });
     </script>
 </body>
 </html>
