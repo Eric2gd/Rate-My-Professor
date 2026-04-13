@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate My Prof - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-2">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i class="fas fa-university text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+        </div>
+
+        <nav class="flex-1 mt-4">
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 sidebar-active">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3 font-medium">Home</span>
+            </a>
+            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            </a>
+            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
+            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            </a>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <div id="nav-guest">
+                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                </a>
+                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                </a>
+            </div>
+            <div id="nav-loggedin" class="hidden">
+                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                </a>
+                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800">Profile Setup</h4>
+                    <p id="sidebar-username" class="text-[10px] text-gray-400">Not logged in</p>
+                </div>
+                <div class="progress-circle">
+                    <div class="progress-inner">60%</div>
+                </div>
+            </div>
+            <button onclick="window.location.href='login.html'" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Complete Setup</button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col">
+        <!-- Top Navigation -->
+        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+            <div class="relative w-96">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm" placeholder="Search professors..." type="search">
+            </div>
+
+            <div class="flex items-center gap-6">
+                <button class="text-gray-400 hover:text-gray-600 relative">
+                    <i class="far fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-3 border-l pl-6">
+                    <div class="text-right">
+                        <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                        <a href="login.html" class="text-xs text-indigo-500 hover:underline" id="header-action">Sign in</a>
+                    </div>
+                    <label id="avatar-upload-label" class="relative cursor-default" title="">
+                        <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                        <input id="user-pic-input" type="file" accept="image/*" class="hidden" onchange="uploadUserPicture(this)">
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="p-8 grid grid-cols-12 gap-8">
+
+            <!-- Left Column: Stats -->
+            <div class="col-span-12 lg:col-span-4 space-y-8">
+
+                <!-- Overall Rating Card -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col items-center">
+                    <div class="bg-indigo-50 p-4 rounded-full mb-4">
+                        <i class="fas fa-users text-indigo-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-gray-500 font-medium mb-1">Average Prof Rating</h3>
+                    <h2 id="avg-rating" class="text-5xl font-extrabold text-gray-800 mb-2">—</h2>
+                    <p id="total-reviews" class="text-sm text-gray-400 mb-4">0 Total Reviews</p>
+                    <div id="avg-stars" class="flex gap-1 text-yellow-400 mb-8">
+                        <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                    </div>
+
+                    <!-- Star Breakdown -->
+                    <div class="w-full space-y-3" id="star-breakdown"></div>
+                </div>
+
+                <!-- Departments + Professors Card -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50" id="professors-section">
+                    <!-- Tabs -->
+                    <div class="flex gap-2 mb-6">
+                        <button id="tab-dept" onclick="switchTab('dept')"
+                            class="px-4 py-1.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white transition">
+                            Departments
+                        </button>
+                        <button id="tab-profs" onclick="switchTab('profs')"
+                            class="px-4 py-1.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                            All Professors
+                        </button>
+                    </div>
+
+                    <!-- Departments view -->
+                    <div id="view-dept">
+                        <div id="departments-list" class="space-y-3">
+                            <p class="text-sm text-gray-400">Loading...</p>
+                        </div>
+                        <a href="departments.html" class="mt-4 flex items-center gap-1 text-xs text-indigo-500 font-semibold hover:underline">
+                            View all departments <i class="fas fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+
+                    <!-- All professors view (hidden by default) -->
+                    <div id="view-profs" class="hidden">
+                        <div id="professors-list" class="space-y-3">
+                            <p class="text-sm text-gray-400">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Banner + Reviews Feed -->
+            <div class="col-span-12 lg:col-span-8 space-y-8">
+
+                <!-- Promo Banner -->
+                <div class="relative bg-indigo-600 rounded-[32px] p-10 overflow-hidden text-white flex justify-between items-center h-48 shadow-xl shadow-indigo-100">
+                    <div class="relative z-10">
+                        <h2 class="text-3xl font-bold mb-2 tracking-tight">Rate Your Professors</h2>
+                        <p class="text-lg opacity-90 font-medium mb-4">Ashesi University</p>
+                        <a href="professors.html" class="bg-white text-indigo-600 px-5 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition">Get Rating</a>
+                    </div>
+                    <svg class="absolute right-0 top-0 opacity-20" width="300" height="300" viewBox="0 0 200 200">
+                        <circle cx="150" cy="50" r="80" stroke="white" stroke-width="1" fill="none" />
+                        <circle cx="160" cy="60" r="60" stroke="white" stroke-width="1" fill="none" />
+                    </svg>
+                    <i class="fas fa-award text-8xl opacity-10 absolute right-12 bottom-0 transform translate-y-4"></i>
+                </div>
+
+                <!-- Reviews Feed -->
+                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" id="reviews-section">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-gray-800 font-bold text-lg">Recent Reviews</h3>
+                        <span id="feed-count" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
+                    </div>
+                    <div id="reviews-feed" class="space-y-8">
+                        <p class="text-gray-400 text-sm text-center py-8">No reviews yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = "http://localhost:3000";
+
+        function getUsernameFromToken(token) {
+            try {
+                return JSON.parse(atob(token.split(".")[1])).username || "User";
+            } catch { return "User"; }
+        }
+
+        function renderStars(avg) {
+            const full  = Math.floor(avg);
+            const half  = avg - full >= 0.5;
+            const empty = 5 - full - (half ? 1 : 0);
+            return '<i class="fas fa-star text-yellow-400"></i>'.repeat(full) +
+                   (half ? '<i class="fas fa-star-half-alt text-yellow-400"></i>' : '') +
+                   '<i class="far fa-star text-gray-200"></i>'.repeat(empty);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Set logged-in user info in header ──────────────────────────────
+        async function initUser() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const username = getUsernameFromToken(token);
+
+            // Header
+            document.getElementById("header-username").textContent = username;
+            document.getElementById("header-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            const action = document.getElementById("header-action");
+            action.textContent = "View Profile";
+            action.removeAttribute("href");
+
+            // Sidebar
+            document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("nav-username").textContent = username;
+            document.getElementById("nav-guest").classList.add("hidden");
+            document.getElementById("nav-loggedin").classList.remove("hidden");
+
+            // Fetch real profile picture
+            try {
+                const res = await fetch(`${API}/users/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.profile_picture) {
+                        document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                    }
+                }
+            } catch {}
+
+            // Make avatar clickable to upload a new picture
+            const label = document.getElementById("avatar-upload-label");
+            label.classList.add("cursor-pointer");
+            label.title = "Click to change your profile picture";
+            label.querySelector("input").disabled = false;
+        }
+
+        async function uploadUserPicture(input) {
+            const token = localStorage.getItem("token");
+            if (!token || !input.files[0]) return;
+
+            const form = new FormData();
+            form.append("picture", input.files[0]);
+
+            const res = await fetch(`${API}/users/profile-picture`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: form
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById("header-avatar").src = `${API}/${data.profile_picture}`;
+            } else {
+                alert(data.message || "Upload failed.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
+
+        function scrollTo(id) {
+            document.getElementById(id).scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        // ── Tab switcher ──────────────────────────────────────────────────
+        function switchTab(tab) {
+            const isDept = tab === 'dept';
+            document.getElementById("view-dept").classList.toggle("hidden", !isDept);
+            document.getElementById("view-profs").classList.toggle("hidden", isDept);
+            document.getElementById("tab-dept").className = `px-4 py-1.5 rounded-xl text-sm font-semibold transition ${isDept ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`;
+            document.getElementById("tab-profs").className = `px-4 py-1.5 rounded-xl text-sm font-semibold transition ${!isDept ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`;
+        }
+
+        // ── Load professors list ───────────────────────────────────────────
+        async function loadProfessors() {
+            const res = await fetch(`${API}/professors`);
+            const professors = await res.json();
+            const list = document.getElementById("professors-list");
+
+            if (professors.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-400">No professors added yet.</p>`;
+                return professors;
+            }
+
+            list.innerHTML = professors.map(p => `
+                <a href="professor-profile.html?id=${p.id}"
+                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
+                    <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-chalkboard-teacher text-indigo-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600">${escapeHtml(p.name)}</p>
+                        <p class="text-xs text-gray-400">${escapeHtml(p.department)}</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
+                </a>`).join("");
+            return professors;
+        }
+
+        // ── Load departments view ─────────────────────────────────────────
+        async function loadDepartments(professors, reviews) {
+            const deptMap = {};
+            professors.forEach(p => {
+                if (!deptMap[p.department]) deptMap[p.department] = { professors: [], ratings: [] };
+                deptMap[p.department].professors.push(p);
+            });
+            reviews.forEach(r => {
+                const prof = professors.find(p => p.id === r.professor_id);
+                if (prof && deptMap[prof.department]) deptMap[prof.department].ratings.push(r.rating);
+            });
+
+            const list = document.getElementById("departments-list");
+            const depts = Object.entries(deptMap);
+            if (depts.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-400">No departments yet.</p>`;
+                return;
+            }
+            list.innerHTML = depts.map(([name, data]) => {
+                const avg = data.ratings.length
+                    ? (data.ratings.reduce((s, r) => s + r, 0) / data.ratings.length).toFixed(1)
+                    : "N/A";
+                return `
+                    <a href="departments.html?dept=${encodeURIComponent(name)}"
+                       class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
+                        <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-building text-indigo-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600">${escapeHtml(name)}</p>
+                            <p class="text-xs text-gray-400">${data.professors.length} professor${data.professors.length !== 1 ? "s" : ""} · ⭐ ${avg}</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
+                    </a>`;
+            }).join("");
+        }
+
+        // ── Load global reviews feed ──────────────────────────────────────
+        async function loadReviews() {
+            const res = await fetch(`${API}/reviews`);
+            const reviews = await res.json();
+
+            document.getElementById("feed-count").textContent =
+                `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+
+            // Compute stats
+            if (reviews.length > 0) {
+                const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                document.getElementById("avg-rating").textContent = avg.toFixed(1);
+                document.getElementById("total-reviews").textContent = `${reviews.length} Total Reviews`;
+                document.getElementById("avg-stars").innerHTML = renderStars(avg);
+                renderBreakdown(reviews);
+            }
+
+            // Render feed
+            const feed = document.getElementById("reviews-feed");
+            if (reviews.length === 0) {
+                feed.innerHTML = `<p class="text-gray-400 text-sm text-center py-8">No reviews yet — be the first!</p>`;
+                return;
+            }
+
+            feed.innerHTML = reviews.map((r, i) => {
+                const date = new Date(r.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                });
+                const avatarUrl = r.user_picture
+                    ? `${API}/${r.user_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
+                return `
+                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
+                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
+                             src="${avatarUrl}" alt="${escapeHtml(r.username)}">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-gray-800">
+                                        ${escapeHtml(r.username)}
+                                        <span class="text-gray-300 font-normal mx-2">on</span>
+                                        <a href="professor-profile.html?id=${r.professor_id}"
+                                           class="text-indigo-600 hover:underline">${escapeHtml(r.professor_name)}</a>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                </div>
+                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                            </div>
+                            <p class="text-gray-500 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                        </div>
+                    </div>`;
+            }).join("");
+            return reviews;
+        }
+
+        function renderBreakdown(reviews) {
+            const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+            reviews.forEach(r => counts[r.rating] = (counts[r.rating] || 0) + 1);
+            const total = reviews.length;
+            document.getElementById("star-breakdown").innerHTML = [5,4,3,2,1].map(star => {
+                const pct = total > 0 ? Math.round((counts[star] / total) * 100) : 0;
+                return `
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="w-4 text-gray-600">${star}</span>
+                        <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                        <div class="flex-1 h-2 bg-indigo-50 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full" style="width:${pct}%"></div>
+                        </div>
+                        <span class="text-gray-400 w-8 text-right">${pct}%</span>
+                    </div>`;
+            }).join("");
+        }
+
+        // ── Search filter ─────────────────────────────────────────────────
+        document.getElementById("search-input").addEventListener("input", function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll("#professors-list a").forEach(el => {
+                el.style.display = el.textContent.toLowerCase().includes(q) ? "" : "none";
+            });
+        });
+
+        // ── Init ─────────────────────────────────────────────────────────
+        initUser();
+        Promise.all([loadProfessors(), loadReviews()]).then(([professors, reviews]) => {
+            if (professors && reviews) loadDepartments(professors, reviews);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate My Prof - Professors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-2">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i class="fas fa-university text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+        </div>
+
+        <nav class="flex-1 mt-4">
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+            </a>
+            <a href="professors.html" class="flex items-center px-6 py-3 sidebar-active">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3 font-medium">Professors</span>
+            </a>
+            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
+            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            </a>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <div id="nav-guest">
+                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                </a>
+                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                </a>
+            </div>
+            <div id="nav-loggedin" class="hidden">
+                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                </a>
+                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
+            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+            <div class="flex items-center gap-3 text-gray-500">
+                <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <span class="text-sm font-semibold text-gray-800">Professors</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="relative w-64">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-search text-sm"></i>
+                    </span>
+                    <input id="search-input" type="search" placeholder="Search professors..."
+                        class="block w-full pl-9 pr-3 py-2 border border-gray-100 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                </div>
+                <div class="flex items-center gap-3 border-l pl-6">
+                    <div class="text-right">
+                        <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                        <a href="login.html" id="header-action" class="text-xs text-indigo-500 hover:underline">Sign in</a>
+                    </div>
+                    <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100"
+                         src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <div class="p-8">
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-gray-800">All Professors</h1>
+                <p class="text-sm text-gray-400 mt-1">Browse and rate professors at Ashesi University.</p>
+            </div>
+
+            <div id="professors-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-gray-400 text-sm col-span-full">Loading...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = "http://localhost:3000";
+
+        // Strip academic titles so ui-avatars shows correct initials (e.g. "Dr. Nathan Amanquah" → "Nathan Amanquah" → "NA")
+        function cleanName(name) {
+            return name.replace(/^(Dr|Prof|Mr|Mrs|Ms|Miss)\.?\s+/i, '').trim();
+        }
+
+        function renderStars(avg) {
+            const full  = Math.floor(avg);
+            const half  = avg - full >= 0.5;
+            const empty = 5 - full - (half ? 1 : 0);
+            return '<i class="fas fa-star text-yellow-400 text-xs"></i>'.repeat(full) +
+                   (half ? '<i class="fas fa-star-half-alt text-yellow-400 text-xs"></i>' : '') +
+                   '<i class="far fa-star text-gray-200 text-xs"></i>'.repeat(empty);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function getUsernameFromToken(token) {
+            try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
+            catch { return "User"; }
+        }
+
+        async function initUser() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const username = getUsernameFromToken(token);
+            document.getElementById("header-username").textContent = username;
+            document.getElementById("header-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            const action = document.getElementById("header-action");
+            action.textContent = "View Profile";
+            action.href = "settings.html";
+            document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("nav-username").textContent = username;
+            document.getElementById("nav-guest").classList.add("hidden");
+            document.getElementById("nav-loggedin").classList.remove("hidden");
+
+            try {
+                const res = await fetch(`${API}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.profile_picture) {
+                        document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                    }
+                }
+            } catch {}
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
+
+        async function loadProfessors() {
+            const [profsRes, reviewsRes] = await Promise.all([
+                fetch(`${API}/professors`),
+                fetch(`${API}/reviews`)
+            ]);
+            const professors = await profsRes.json();
+            const reviews    = await reviewsRes.json();
+
+            // Build avg rating map per professor
+            const ratingMap = {};
+            reviews.forEach(r => {
+                if (!ratingMap[r.professor_id]) ratingMap[r.professor_id] = [];
+                ratingMap[r.professor_id].push(r.rating);
+            });
+
+            const grid = document.getElementById("professors-grid");
+
+            if (professors.length === 0) {
+                grid.innerHTML = `<p class="text-gray-400 text-sm col-span-full">No professors found.</p>`;
+                return professors;
+            }
+
+            grid.innerHTML = professors.map(p => {
+                const ratings = ratingMap[p.id] || [];
+                const avg = ratings.length ? ratings.reduce((s, r) => s + r, 0) / ratings.length : null;
+                const avatarSrc = p.profile_picture
+                    ? `${API}/${p.profile_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName(p.name))}&background=6366f1&color=fff&size=80`;
+
+                return `
+                    <a href="professor-profile.html?id=${p.id}"
+                       class="prof-card bg-white rounded-[24px] p-6 shadow-sm border border-gray-50 hover:border-indigo-200 hover:shadow-md transition flex flex-col items-center text-center group"
+                       data-name="${escapeHtml(p.name.toLowerCase())}" data-dept="${escapeHtml((p.department || '').toLowerCase())}">
+                        <img class="w-16 h-16 rounded-full object-cover border-4 border-indigo-50 mb-3"
+                             src="${avatarSrc}" alt="${escapeHtml(p.name)}">
+                        <h3 class="text-sm font-bold text-gray-800 group-hover:text-indigo-600 mb-1">${escapeHtml(p.name)}</h3>
+                        <span class="bg-indigo-50 text-indigo-600 px-3 py-0.5 rounded-full text-xs font-semibold mb-3">${escapeHtml(p.department || 'Unknown')}</span>
+                        <div class="flex items-center gap-1 mb-1">
+                            ${avg ? renderStars(avg) : '<span class="text-xs text-gray-300">No ratings yet</span>'}
+                        </div>
+                        <p class="text-xs text-gray-400">${avg ? avg.toFixed(1) + ' · ' : ''}${ratings.length} review${ratings.length !== 1 ? 's' : ''}</p>
+                    </a>`;
+            }).join("");
+
+            return professors;
+        }
+
+        // Live search filter
+        document.getElementById("search-input").addEventListener("input", function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll(".prof-card").forEach(card => {
+                const match = card.dataset.name.includes(q) || card.dataset.dept.includes(q);
+                card.style.display = match ? "" : "none";
+            });
+        });
+
+        initUser();
+        loadProfessors();
+    </script>
+</body>
+</html>

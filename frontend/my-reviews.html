@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate My Prof - My Reviews</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+        <div class="p-6 flex items-center gap-2">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i class="fas fa-university text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+        </div>
+
+        <nav class="flex-1 mt-4">
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+            </a>
+            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            </a>
+            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            </a>
+            <a href="my-reviews.html" class="flex items-center px-6 py-3 sidebar-active">
+                <i class="fas fa-star w-5"></i> <span class="ml-3 font-medium">My Reviews</span>
+            </a>
+
+            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <div id="nav-guest">
+                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                </a>
+                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                </a>
+            </div>
+            <div id="nav-loggedin" class="hidden">
+                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                </a>
+                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
+            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+            <div class="flex items-center gap-3 text-gray-500">
+                <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <span class="text-sm font-semibold text-gray-800">My Reviews</span>
+            </div>
+            <div class="flex items-center gap-3 border-l pl-6">
+                <div class="text-right">
+                    <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
+                    <a href="settings.html" class="text-xs text-indigo-500 hover:underline">View Profile</a>
+                </div>
+                <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100"
+                     src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <div class="p-8 max-w-3xl w-full">
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-gray-800">My Reviews</h1>
+                    <p class="text-sm text-gray-400 mt-1">Reviews you have left for professors.</p>
+                </div>
+                <span id="review-count-badge" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
+            </div>
+
+            <div id="reviews-container" class="space-y-4">
+                <p class="text-gray-400 text-sm">Loading...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[32px] p-8 w-full max-w-lg shadow-2xl">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Edit Review</h3>
+            <p id="edit-prof-name" class="text-sm text-indigo-600 font-semibold mb-5"></p>
+
+            <!-- Star picker -->
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-sm font-semibold text-gray-600 mr-1">Rating:</span>
+                <div id="edit-star-picker" class="flex gap-1 text-2xl">
+                    <i class="fas fa-star star-btn" data-value="1"></i>
+                    <i class="fas fa-star star-btn" data-value="2"></i>
+                    <i class="fas fa-star star-btn" data-value="3"></i>
+                    <i class="fas fa-star star-btn" data-value="4"></i>
+                    <i class="fas fa-star star-btn" data-value="5"></i>
+                </div>
+            </div>
+
+            <textarea id="edit-text" rows="5"
+                class="w-full border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-4"></textarea>
+
+            <div class="flex items-center justify-between">
+                <p id="edit-msg" class="text-sm font-medium min-h-[20px]"></p>
+                <div class="flex gap-3">
+                    <button onclick="closeEditModal()"
+                        class="px-5 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button onclick="saveEdit()"
+                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://localhost:3000";
+        let editingReviewId = null;
+        let editingRating   = 0;
+        const ratingLabels  = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" };
+
+        function getUsernameFromToken(token) {
+            try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
+            catch { return "User"; }
+        }
+
+        function renderStars(avg) {
+            const full  = Math.floor(avg);
+            const half  = avg - full >= 0.5;
+            const empty = 5 - full - (half ? 1 : 0);
+            return '<i class="fas fa-star text-yellow-400"></i>'.repeat(full) +
+                   (half ? '<i class="fas fa-star-half-alt text-yellow-400"></i>' : '') +
+                   '<i class="far fa-star text-gray-200"></i>'.repeat(empty);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
+
+        async function initUser() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+            const username = getUsernameFromToken(token);
+            document.getElementById("header-username").textContent = username;
+            document.getElementById("header-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("nav-username").textContent = username;
+            document.getElementById("nav-guest").classList.add("hidden");
+            document.getElementById("nav-loggedin").classList.remove("hidden");
+
+            try {
+                const res = await fetch(`${API}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.profile_picture) {
+                        document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                    }
+                }
+            } catch {}
+        }
+
+        async function loadMyReviews() {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API}/reviews/mine`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const reviews = await res.json();
+
+            const badge = document.getElementById("review-count-badge");
+            badge.textContent = `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+
+            const container = document.getElementById("reviews-container");
+
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-[24px] p-10 shadow-sm border border-gray-50 text-center">
+                        <i class="fas fa-star text-gray-200 text-4xl mb-4"></i>
+                        <p class="text-gray-500 font-semibold mb-2">No reviews yet</p>
+                        <p class="text-sm text-gray-400 mb-6">You haven't rated any professors yet.</p>
+                        <a href="professors.html"
+                           class="inline-block px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                            Browse Professors
+                        </a>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = reviews.map(r => {
+                const date = new Date(r.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                });
+                return `
+                    <div id="review-card-${r.id}" class="bg-white rounded-[24px] p-6 shadow-sm border border-gray-50">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <a href="professor-profile.html?id=${r.professor_id}"
+                                   class="text-sm font-bold text-indigo-600 hover:underline">${escapeHtml(r.professor_name)}</a>
+                                <span class="ml-2 bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-full text-xs font-semibold">${escapeHtml(r.department)}</span>
+                                <div class="flex items-center gap-2 mt-1 mb-3">
+                                    <div class="flex text-sm">${renderStars(r.rating)}</div>
+                                    <span class="text-xs text-gray-400">${date}</span>
+                                </div>
+                                <p class="text-gray-600 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                            </div>
+                            <div class="flex flex-col gap-2 flex-shrink-0">
+                                <button onclick="openEditModal(${r.id}, '${escapeHtml(r.professor_name)}', ${r.rating}, ${JSON.stringify(r.review_text)})"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs font-semibold rounded-xl transition">
+                                    <i class="fas fa-pen text-[10px]"></i> Edit
+                                </button>
+                                <button onclick="deleteReview(${r.id})"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 border border-red-100 text-red-400 hover:bg-red-50 text-xs font-semibold rounded-xl transition">
+                                    <i class="fas fa-trash text-[10px]"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        // ── Edit modal ──────────────────────────────────────────────────────
+        document.querySelectorAll("#edit-star-picker .star-btn").forEach(star => {
+            star.addEventListener("click", () => {
+                editingRating = parseInt(star.dataset.value);
+                document.querySelectorAll("#edit-star-picker .star-btn").forEach(s => {
+                    s.classList.toggle("active", parseInt(s.dataset.value) <= editingRating);
+                });
+            });
+        });
+
+        function openEditModal(id, profName, rating, text) {
+            editingReviewId = id;
+            editingRating   = rating;
+            document.getElementById("edit-prof-name").textContent = profName;
+            document.getElementById("edit-text").value = text;
+            document.getElementById("edit-msg").textContent = "";
+            document.querySelectorAll("#edit-star-picker .star-btn").forEach(s => {
+                s.classList.toggle("active", parseInt(s.dataset.value) <= rating);
+            });
+            document.getElementById("edit-modal").classList.remove("hidden");
+        }
+
+        function closeEditModal() {
+            document.getElementById("edit-modal").classList.add("hidden");
+            editingReviewId = null;
+        }
+
+        async function saveEdit() {
+            const token = localStorage.getItem("token");
+            const text  = document.getElementById("edit-text").value.trim();
+            const msg   = document.getElementById("edit-msg");
+
+            if (!text) {
+                msg.textContent = "Review text cannot be empty.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+            if (!editingRating) {
+                msg.textContent = "Please select a rating.";
+                msg.className = "text-sm font-medium text-red-500";
+                return;
+            }
+
+            const res = await fetch(`${API}/reviews/${editingReviewId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ review_text: text, rating: editingRating })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                closeEditModal();
+                loadMyReviews();
+            } else {
+                msg.textContent = data.message || "Failed to save.";
+                msg.className = "text-sm font-medium text-red-500";
+            }
+        }
+
+        async function deleteReview(id) {
+            if (!confirm("Delete this review? This cannot be undone.")) return;
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API}/reviews/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                document.getElementById(`review-card-${id}`).remove();
+                // Update badge count
+                const remaining = document.querySelectorAll("[id^='review-card-']").length;
+                document.getElementById("review-count-badge").textContent =
+                    `${remaining} review${remaining !== 1 ? "s" : ""}`;
+                if (remaining === 0) loadMyReviews(); // show empty state
+            } else {
+                alert("Failed to delete review.");
+            }
+        }
+
+        // Close modal on backdrop click
+        document.getElementById("edit-modal").addEventListener("click", function(e) {
+            if (e.target === this) closeEditModal();
+        });
+
+        initUser().then(() => loadMyReviews());
+    </script>
+</body>
+</html>

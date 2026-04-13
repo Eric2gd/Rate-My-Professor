@@ -1,0 +1,32 @@
+/* ── Shared base ── */
+body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+
+/* ── Sidebar active state (dashboard + professor-profile) ── */
+.sidebar-active { border-left: 3px solid #6366f1; background: #f3f4ff; color: #6366f1; }
+
+/* ── Profile setup progress ring (dashboard) ── */
+.progress-circle {
+    background: conic-gradient(#22c55e 60%, #e2e8f0 0);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.progress-inner {
+    background: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* ── Star picker (professor-profile) ── */
+.star-btn { cursor: pointer; transition: color 0.15s; }
+.star-btn.active { color: #facc15; }
+.star-btn:not(.active) { color: #e2e8f0; }
