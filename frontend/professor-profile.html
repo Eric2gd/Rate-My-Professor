@@ -25,15 +25,14 @@
             <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                 <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
             </a>
-            <a href="dashboard.html" class="flex items-center px-6 py-3 sidebar-active">
+            <a href="professors.html" class="flex items-center px-6 py-3 sidebar-active">
                 <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3 font-medium">Professors</span>
             </a>
             <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                 <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
             </a>
-            <a href="#" onclick="document.getElementById('reviews-card').scrollIntoView({behavior:'smooth'}); return false;"
-               class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-star w-5"></i> <span class="ml-3">Reviews</span>
+            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
             </a>
 
             <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
@@ -46,7 +45,7 @@
                 </a>
             </div>
             <div id="nav-loggedin" class="hidden">
-                <a href="#" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
+                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
                     <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
                 </a>
                 <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
@@ -177,7 +176,7 @@
             }
         }
 
-        function initUser() {
+        async function initUser() {
             const token = localStorage.getItem("token");
             if (!token) return;
             const username = getUsernameFromToken(token);
@@ -189,6 +188,19 @@
             document.getElementById("nav-username").textContent = username;
             document.getElementById("nav-guest").classList.add("hidden");
             document.getElementById("nav-loggedin").classList.remove("hidden");
+
+            // Fetch real profile picture
+            try {
+                const res = await fetch(`${API}/users/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.profile_picture) {
+                        document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                    }
+                }
+            } catch {}
         }
 
         function logout() {
@@ -231,9 +243,9 @@
                 return;
             }
 
-            const initials = prof.name.split(" ").map(w => w[0]).join("+");
-            document.getElementById("prof-avatar").src =
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.name)}&background=6366f1&color=fff&size=128`;
+            document.getElementById("prof-avatar").src = prof.profile_picture
+                ? `${API}/${prof.profile_picture}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName(prof.name))}&background=6366f1&color=fff&size=128`;
             document.getElementById("prof-name").textContent = prof.name;
             document.getElementById("prof-department").textContent = prof.department;
             document.getElementById("breadcrumb-name").textContent = prof.name;
@@ -284,7 +296,9 @@
                 const date = new Date(r.created_at).toLocaleDateString("en-GB", {
                     day: "numeric", month: "short", year: "numeric"
                 });
-                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
+                const avatarUrl = r.user_picture
+                    ? `${API}/${r.user_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 return `
                     <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""}">
                         <div class="flex gap-6">
@@ -425,7 +439,9 @@
             }
 
             container.innerHTML = replies.map(rp => {
-                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
+                const avatarUrl = rp.user_picture
+                    ? `${API}/${rp.user_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
                 const date = new Date(rp.created_at).toLocaleDateString("en-GB", {
                     day: "numeric", month: "short", year: "numeric"
                 });
@@ -491,6 +507,11 @@
                 msg.textContent = data.message || "Failed to post reply.";
                 msg.className = "text-xs mt-1 text-red-500";
             }
+        }
+
+        // ── Strip academic titles for correct initials in ui-avatars ────────
+        function cleanName(name) {
+            return name.replace(/^(Dr|Prof|Mr|Mrs|Ms|Miss)\.?\s+/i, '').trim();
         }
 
         // ── XSS protection ──────────────────────────────────────────────────
