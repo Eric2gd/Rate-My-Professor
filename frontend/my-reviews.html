@@ -190,15 +190,22 @@
 
         async function loadMyReviews() {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${API}/reviews/mine`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const reviews = await res.json();
-
-            const badge = document.getElementById("review-count-badge");
-            badge.textContent = `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
-
             const container = document.getElementById("reviews-container");
+            const badge = document.getElementById("review-count-badge");
+
+            let reviews;
+            try {
+                const res = await fetch(`${API}/reviews/mine`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                reviews = await res.json();
+            } catch (err) {
+                container.innerHTML = `<p class="text-sm text-red-400">Could not load reviews — make sure the server is running and try refreshing.</p>`;
+                return;
+            }
+
+            badge.textContent = `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
 
             if (reviews.length === 0) {
                 container.innerHTML = `

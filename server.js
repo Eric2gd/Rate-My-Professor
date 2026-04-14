@@ -134,11 +134,21 @@ function authenticateToken(req, res, next) {
 }
 
 // =========================
+// GET DEPARTMENTS
+// =========================
+app.get("/departments", (req, res) => {
+  db.query("SELECT id, name FROM departments ORDER BY name ASC", (err, results) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    res.json(results);
+  });
+});
+
+// =========================
 // GET PROFESSORS
 // =========================
 app.get("/professors", (req, res) => {
   db.query(
-    `SELECT p.id, p.name, p.profile_picture, p.created_at,
+    `SELECT p.id, p.name, p.profile_picture, p.bio, p.created_at,
             COALESCE(d.name, 'Unknown') AS department
      FROM professors p
      LEFT JOIN departments d ON p.department_id = d.id`,
