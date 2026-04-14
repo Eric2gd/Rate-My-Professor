@@ -1,8 +1,35 @@
 /* ── Shared base ── */
-body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 30%, #ede9fe 60%, #e0f2fe 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
 
-/* ── Sidebar active state (dashboard + professor-profile) ── */
-.sidebar-active { border-left: 3px solid #6366f1; background: #f3f4ff; color: #6366f1; }
+/* ── Frosted glass sidebar ── */
+.glass-sidebar {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 4px 0 24px rgba(99, 102, 241, 0.07);
+}
+
+/* ── Frosted glass top header ── */
+.glass-header {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.07);
+}
+
+/* ── Sidebar active state ── */
+.sidebar-active {
+    border-left: 3px solid #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
 
 /* ── Profile setup progress ring (dashboard) ── */
 .progress-circle {
