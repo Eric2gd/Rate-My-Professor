@@ -12,7 +12,7 @@
 <body class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r hidden lg:flex flex-col">
+    <aside class="w-64 hidden lg:flex flex-col glass-sidebar">
         <div class="p-6 flex items-center gap-2">
             <div class="bg-indigo-600 p-1.5 rounded-lg">
                 <i class="fas fa-university text-white text-xl"></i>
@@ -71,7 +71,7 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col">
         <!-- Top Navigation -->
-        <header class="bg-white h-16 border-b flex items-center justify-between px-8">
+        <header class="h-16 flex items-center justify-between px-8 glass-header">
             <div class="relative w-96">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                     <i class="fas fa-search"></i>
@@ -148,6 +148,9 @@
                         <div id="professors-list" class="space-y-3">
                             <p class="text-sm text-gray-400">Loading...</p>
                         </div>
+                        <a href="professors.html" class="mt-4 flex items-center gap-1 text-xs text-indigo-500 font-semibold hover:underline">
+                            View all professors <i class="fas fa-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -295,7 +298,8 @@
                 return professors;
             }
 
-            list.innerHTML = professors.map(p => `
+            const preview = professors.slice(0, 6);
+            list.innerHTML = preview.map(p => `
                 <a href="professor-profile.html?id=${p.id}"
                    class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
                     <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
