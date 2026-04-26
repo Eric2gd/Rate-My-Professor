@@ -12,87 +12,92 @@
 <body class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 hidden lg:flex flex-col glass-sidebar">
-        <div class="p-6 flex items-center gap-2">
-            <div class="bg-indigo-600 p-1.5 rounded-lg">
-                <i class="fas fa-university text-white text-xl"></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+    <aside id="sidebar" class="rmp-sidebar hidden lg:flex">
+        <!-- Logo + pin -->
+        <div class="rmp-logo">
+            <div class="rmp-logo-icon"><i class="fas fa-university"></i></div>
+            <span class="rmp-label text-base font-bold text-gray-800" style="flex:1">RateMyProf</span>
+            <button id="pin-btn" class="rmp-pin-btn" onclick="togglePin()" title="Pin sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 mt-4">
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
-            <a href="dashboard.html" class="flex items-center px-6 py-3 sidebar-active">
-                <i class="fas fa-th-large w-5"></i> <span class="ml-3 font-medium">Home</span>
+        <!-- Nav -->
+        <nav class="rmp-nav">
+            <span class="rmp-section-title">MENU</span>
+            <a href="dashboard.html" class="rmp-nav-item rmp-active">
+                <i class="fas fa-th-large"></i><span class="rmp-label">Home</span>
             </a>
-            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            <a href="professors.html" class="rmp-nav-item">
+                <i class="fas fa-chalkboard-teacher"></i><span class="rmp-label">Professors</span>
             </a>
-            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            <a href="departments.html" class="rmp-nav-item">
+                <i class="fas fa-building"></i><span class="rmp-label">Departments</span>
             </a>
-            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            <a href="my-reviews.html" class="rmp-nav-item">
+                <i class="fas fa-star"></i><span class="rmp-label">My Reviews</span>
             </a>
 
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <span class="rmp-section-title">ACCOUNT</span>
             <div id="nav-guest">
-                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                <a href="login.html" class="rmp-nav-item">
+                    <i class="fas fa-sign-in-alt"></i><span class="rmp-label">Sign In</span>
                 </a>
-                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                <a href="register.html" class="rmp-nav-item">
+                    <i class="fas fa-user-plus"></i><span class="rmp-label">Register</span>
                 </a>
             </div>
             <div id="nav-loggedin" class="hidden">
-                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                <a href="settings.html" class="rmp-nav-item">
+                    <i class="fas fa-user-circle"></i><span id="nav-username" class="rmp-label truncate">Profile</span>
                 </a>
-                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
-                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                <button onclick="logout()" class="rmp-nav-item" style="color:#ef4444" onmouseover="this.style.background='rgba(254,242,242,0.8)'" onmouseout="this.style.background=''">
+                    <i class="fas fa-sign-out-alt"></i><span class="rmp-label">Log Out</span>
                 </button>
             </div>
         </nav>
 
-        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <h4 class="text-sm font-bold text-gray-800">Profile Setup</h4>
-                    <p id="sidebar-username" class="text-[10px] text-gray-400">Not logged in</p>
-                </div>
-                <div class="progress-circle">
-                    <div class="progress-inner">60%</div>
-                </div>
+        <!-- Footer user card -->
+        <div class="rmp-footer">
+            <img id="sidebar-avatar" class="rmp-footer-avatar"
+                 src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="">
+            <div class="rmp-label" style="min-width:0">
+                <p id="sidebar-username" class="text-xs font-semibold text-gray-700 truncate" style="max-width:140px">Not logged in</p>
+                <a href="settings.html" class="text-[10px] text-indigo-400 hover:underline">View Profile</a>
             </div>
-            <button onclick="window.location.href='login.html'" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Complete Setup</button>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col">
         <!-- Top Navigation -->
-        <header class="h-16 flex items-center justify-between px-8 glass-header">
-            <div class="relative w-96">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                    <i class="fas fa-search"></i>
+        <header class="h-16 flex items-center justify-between px-6 glass-header">
+            <!-- Glass search bar -->
+            <div class="glass-search relative w-80">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                    <i class="fas fa-search text-sm"></i>
                 </span>
-                <input id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm" placeholder="Search professors..." type="search">
+                <input id="search-input" class="block w-full pl-9 pr-3 py-2.5 text-sm" placeholder="Search professors..." type="search">
             </div>
 
-            <div class="flex items-center gap-6">
-                <button class="text-gray-400 hover:text-gray-600 relative">
-                    <i class="far fa-bell text-xl"></i>
-                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <div class="flex items-center gap-3">
+                <!-- Glass bell -->
+                <button class="glass-bell">
+                    <i class="far fa-bell text-gray-600 text-base"></i>
+                    <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
                 </button>
-                <div class="flex items-center gap-3 border-l pl-6">
-                    <div class="text-right">
-                        <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
-                        <a href="login.html" class="text-xs text-indigo-500 hover:underline" id="header-action">Sign in</a>
-                    </div>
+
+                <!-- Glass user chip -->
+                <div class="glass-user-chip">
                     <label id="avatar-upload-label" class="relative cursor-default" title="">
-                        <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                        <img id="header-avatar" class="h-9 w-9 rounded-xl object-cover border-2 border-white/70"
+                             src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
                         <input id="user-pic-input" type="file" accept="image/*" class="hidden" onchange="uploadUserPicture(this)">
                     </label>
+                    <div class="text-left">
+                        <p id="header-username" class="text-sm font-bold text-gray-800 leading-tight">Guest</p>
+                        <a href="login.html" class="text-xs text-indigo-500 hover:underline leading-tight" id="header-action">Sign in</a>
+                    </div>
                 </div>
             </div>
         </header>
@@ -189,6 +194,16 @@
     <script>
         const API = "http://localhost:3000";
 
+        // ── Sidebar pin ───────────────────────────────────────────────────
+        const sidebar = document.getElementById('sidebar');
+        if (localStorage.getItem('sidebarPinned') === 'true') sidebar.classList.add('pinned');
+        function togglePin() {
+            sidebar.classList.toggle('pinned');
+            localStorage.setItem('sidebarPinned', sidebar.classList.contains('pinned'));
+            document.getElementById('pin-btn').querySelector('i').className =
+                sidebar.classList.contains('pinned') ? 'fas fa-times' : 'fas fa-thumbtack';
+        }
+
         function getUsernameFromToken(token) {
             try {
                 return JSON.parse(atob(token.split(".")[1])).username || "User";
@@ -224,6 +239,8 @@
 
             // Sidebar
             document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("sidebar-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             document.getElementById("nav-username").textContent = username;
             document.getElementById("nav-guest").classList.add("hidden");
             document.getElementById("nav-loggedin").classList.remove("hidden");
@@ -237,6 +254,7 @@
                     const user = await res.json();
                     if (user.profile_picture) {
                         document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                        document.getElementById("sidebar-avatar").src = `${API}/${user.profile_picture}`;
                     }
                 }
             } catch {}
@@ -314,7 +332,14 @@
             return professors;
         }
 
-        // ── Load departments view ─────────────────────────────────────────
+        // ── Load departments view (accordion, collapsed by default) ──────
+        function toggleDeptAccordion(id) {
+            const body    = document.getElementById(`dept-body-${id}`);
+            const chevron = document.getElementById(`dept-chev-${id}`);
+            const isOpen  = body.classList.toggle('open');
+            chevron.style.transform = isOpen ? 'rotate(90deg)' : '';
+        }
+
         async function loadDepartments(professors, reviews) {
             const deptMap = {};
             professors.forEach(p => {
@@ -332,23 +357,116 @@
                 list.innerHTML = `<p class="text-sm text-gray-400">No departments yet.</p>`;
                 return;
             }
-            list.innerHTML = depts.map(([name, data]) => {
+            list.innerHTML = depts.map(([name, data], idx) => {
                 const avg = data.ratings.length
                     ? (data.ratings.reduce((s, r) => s + r, 0) / data.ratings.length).toFixed(1)
                     : "N/A";
-                return `
+                const profItems = data.professors.slice(0, 5).map(p => `
+                    <a href="professor-profile.html?id=${p.id}"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-indigo-50 transition group/p">
+                        <div class="bg-gray-100 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-gray-400" style="font-size:9px"></i>
+                        </div>
+                        <span class="text-xs text-gray-600 group-hover/p:text-indigo-600">${escapeHtml(p.name)}</span>
+                    </a>`).join("");
+                const moreLink = data.professors.length > 5 ? `
                     <a href="departments.html?dept=${encodeURIComponent(name)}"
-                       class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
-                        <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-building text-indigo-500 text-sm"></i>
+                       class="block text-center text-xs text-indigo-400 hover:text-indigo-600 py-1 font-medium">
+                        +${data.professors.length - 5} more professors →
+                    </a>` : '';
+                return `
+                    <div class="rounded-2xl border border-gray-100 overflow-hidden bg-white">
+                        <button onclick="toggleDeptAccordion(${idx})"
+                            class="w-full flex items-center gap-3 p-3 hover:bg-indigo-50 transition text-left group">
+                            <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-building text-indigo-500 text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600 truncate">${escapeHtml(name)}</p>
+                                <p class="text-xs text-gray-400">${data.professors.length} prof${data.professors.length !== 1 ? "s" : ""} · ⭐ ${avg}</p>
+                            </div>
+                            <i id="dept-chev-${idx}" class="fas fa-chevron-right text-gray-300 text-xs flex-shrink-0 transition-transform duration-200"></i>
+                        </button>
+                        <div id="dept-body-${idx}" class="dept-accordion-body">
+                            <div class="pb-2 px-1 space-y-0.5">
+                                ${profItems}
+                                ${moreLink}
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800 group-hover:text-indigo-600">${escapeHtml(name)}</p>
-                            <p class="text-xs text-gray-400">${data.professors.length} professor${data.professors.length !== 1 ? "s" : ""} · ⭐ ${avg}</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto group-hover:text-indigo-400"></i>
-                    </a>`;
+                    </div>`;
             }).join("");
+        }
+
+        // ── Replies ───────────────────────────────────────────────────────
+        const replyLoaded = {};
+
+        async function toggleReplies(reviewId) {
+            const section = document.getElementById(`replies-${reviewId}`);
+            const chevron = document.getElementById(`rep-chev-${reviewId}`);
+            const isHidden = section.classList.toggle('hidden');
+            chevron.style.transform = isHidden ? '' : 'rotate(180deg)';
+            if (!isHidden && !replyLoaded[reviewId]) {
+                await loadReplies(reviewId);
+            }
+        }
+
+        async function loadReplies(reviewId) {
+            const res = await fetch(`${API}/replies?review_id=${reviewId}`);
+            const replies = await res.json();
+            replyLoaded[reviewId] = true;
+
+            const list      = document.getElementById(`rep-list-${reviewId}`);
+            const form      = document.getElementById(`rep-form-${reviewId}`);
+            const countSpan = document.getElementById(`rep-count-${reviewId}`);
+
+            countSpan.textContent = replies.length === 0
+                ? 'Reply'
+                : `${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}`;
+
+            if (replies.length === 0) {
+                list.innerHTML = `<p class="text-xs text-gray-400 italic">No replies yet — be the first!</p>`;
+            } else {
+                list.innerHTML = replies.map(rep => {
+                    const d = new Date(rep.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                    const av = rep.user_picture
+                        ? `${API}/${rep.user_picture}`
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.username)}&background=e0e7ff&color=4338ca&size=32`;
+                    return `
+                        <div class="flex gap-2 items-start">
+                            <img class="w-7 h-7 rounded-full object-cover flex-shrink-0 border-2 border-white"
+                                 src="${av}" alt="">
+                            <div class="flex-1 reply-bubble">
+                                <span class="text-xs font-bold text-gray-700">${escapeHtml(rep.username)}</span>
+                                <span class="text-[10px] text-gray-400 ml-2">${d}</span>
+                                <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(rep.reply_text)}</p>
+                            </div>
+                        </div>`;
+                }).join("");
+            }
+
+            // Show reply form if logged in
+            if (localStorage.getItem("token")) {
+                form.style.display = 'flex';
+            }
+        }
+
+        async function submitReply(reviewId) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const input = document.getElementById(`rep-input-${reviewId}`);
+            const text  = input.value.trim();
+            if (!text) return;
+
+            const res = await fetch(`${API}/replies`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ review_id: reviewId, reply_text: text })
+            });
+            if (res.ok) {
+                input.value = '';
+                replyLoaded[reviewId] = false;
+                await loadReplies(reviewId);
+            }
         }
 
         // ── Load global reviews feed ──────────────────────────────────────
@@ -386,7 +504,7 @@
                     <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
                         <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
                              src="${avatarUrl}" alt="${escapeHtml(r.username)}">
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <h4 class="font-bold text-gray-800">
@@ -397,9 +515,35 @@
                                     </h4>
                                     <p class="text-xs text-gray-400 font-medium">${date}</p>
                                 </div>
-                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                                <div class="flex text-sm flex-shrink-0">${renderStars(r.rating)}</div>
                             </div>
-                            <p class="text-gray-500 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
+
+                            <!-- Replies toggle -->
+                            <button onclick="toggleReplies(${r.id})"
+                                class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition font-medium">
+                                <i class="far fa-comment-dots"></i>
+                                <span id="rep-count-${r.id}">Replies</span>
+                                <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
+                            </button>
+
+                            <!-- Replies section -->
+                            <div id="replies-${r.id}" class="hidden mt-3 space-y-2 pl-3 border-l-2 border-indigo-50">
+                                <div id="rep-list-${r.id}" class="space-y-2">
+                                    <p class="text-xs text-gray-400">Loading...</p>
+                                </div>
+                                <!-- Reply form (shown when logged in) -->
+                                <div id="rep-form-${r.id}" class="gap-2 mt-2" style="display:none">
+                                    <input id="rep-input-${r.id}" type="text"
+                                        placeholder="Write a reply..."
+                                        class="flex-1 text-xs border border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-gray-50"
+                                        onkeydown="if(event.key==='Enter') submitReply(${r.id})">
+                                    <button onclick="submitReply(${r.id})"
+                                        class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-xl font-semibold transition flex-shrink-0">
+                                        Post
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>`;
             }).join("");
