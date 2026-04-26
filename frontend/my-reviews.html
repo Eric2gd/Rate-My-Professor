@@ -12,82 +12,91 @@
 <body class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 hidden lg:flex flex-col glass-sidebar">
-        <div class="p-6 flex items-center gap-2">
-            <div class="bg-indigo-600 p-1.5 rounded-lg">
-                <i class="fas fa-university text-white text-xl"></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+    <aside id="sidebar" class="rmp-sidebar hidden lg:flex">
+        <!-- Logo + pin -->
+        <div class="rmp-logo">
+            <div class="rmp-logo-icon"><i class="fas fa-university"></i></div>
+            <span class="rmp-label text-base font-bold text-gray-800" style="flex:1">RateMyProf</span>
+            <button id="pin-btn" class="rmp-pin-btn" onclick="togglePin()" title="Pin sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 mt-4">
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
-            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+        <nav class="rmp-nav">
+            <span class="rmp-section-title">MENU</span>
+            <a href="dashboard.html" class="rmp-nav-item">
+                <i class="fas fa-th-large"></i><span class="rmp-label">Home</span>
             </a>
-            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            <a href="professors.html" class="rmp-nav-item">
+                <i class="fas fa-chalkboard-teacher"></i><span class="rmp-label">Professors</span>
             </a>
-            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            <a href="departments.html" class="rmp-nav-item">
+                <i class="fas fa-building"></i><span class="rmp-label">Departments</span>
             </a>
-            <a href="my-reviews.html" class="flex items-center px-6 py-3 sidebar-active">
-                <i class="fas fa-star w-5"></i> <span class="ml-3 font-medium">My Reviews</span>
+            <a href="my-reviews.html" class="rmp-nav-item rmp-active">
+                <i class="fas fa-star"></i><span class="rmp-label">My Reviews</span>
             </a>
 
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <span class="rmp-section-title">ACCOUNT</span>
             <div id="nav-guest">
-                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                <a href="login.html" class="rmp-nav-item">
+                    <i class="fas fa-sign-in-alt"></i><span class="rmp-label">Sign In</span>
                 </a>
-                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                <a href="register.html" class="rmp-nav-item">
+                    <i class="fas fa-user-plus"></i><span class="rmp-label">Register</span>
                 </a>
             </div>
             <div id="nav-loggedin" class="hidden">
-                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                <a href="settings.html" class="rmp-nav-item">
+                    <i class="fas fa-user-circle"></i><span id="nav-username" class="rmp-label truncate">Profile</span>
                 </a>
-                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
-                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                <button onclick="logout()" class="rmp-nav-item" style="color:#ef4444" onmouseover="this.style.background='rgba(254,242,242,0.8)'" onmouseout="this.style.background=''">
+                    <i class="fas fa-sign-out-alt"></i><span class="rmp-label">Log Out</span>
                 </button>
             </div>
         </nav>
 
-        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
-            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        <div class="rmp-footer">
+            <img id="sidebar-avatar" class="rmp-footer-avatar"
+                 src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="">
+            <div class="rmp-label" style="min-width:0">
+                <p id="sidebar-username" class="text-xs font-semibold text-gray-700 truncate" style="max-width:140px">Not logged in</p>
+                <a href="settings.html" class="text-[10px] text-indigo-400 hover:underline">View Profile</a>
+            </div>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col">
         <!-- Header -->
-        <header class="h-16 flex items-center justify-between px-8 glass-header">
-            <div class="flex items-center gap-3 text-gray-500">
+        <header class="h-16 flex items-center justify-between px-6 glass-header">
+            <div class="flex items-center gap-2 text-gray-500">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <span class="text-sm font-semibold text-gray-800">My Reviews</span>
             </div>
-            <div class="flex items-center gap-3 border-l pl-6">
-                <div class="text-right">
-                    <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
-                    <a href="settings.html" class="text-xs text-indigo-500 hover:underline">View Profile</a>
-                </div>
-                <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100"
+            <div class="glass-user-chip">
+                <img id="header-avatar" class="h-9 w-9 rounded-xl object-cover border-2 border-white/70"
                      src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                <div class="text-left">
+                    <p id="header-username" class="text-sm font-bold text-gray-800 leading-tight">Guest</p>
+                    <a href="settings.html" class="text-xs text-indigo-500 hover:underline leading-tight">View Profile</a>
+                </div>
             </div>
         </header>
 
         <!-- Page content -->
         <div class="p-8 max-w-3xl w-full">
-            <div class="mb-8 flex items-center justify-between">
+            <div class="mb-6 flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-extrabold text-gray-800">My Reviews</h1>
                     <p class="text-sm text-gray-400 mt-1">Reviews you have left for professors.</p>
                 </div>
                 <span id="review-count-badge" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
             </div>
+
+            <!-- User stats card (populated after load) -->
+            <div id="user-stats-card" class="hidden mb-6"></div>
 
             <div id="reviews-container" class="space-y-4">
                 <p class="text-gray-400 text-sm">Loading...</p>
@@ -138,6 +147,16 @@
         let editingRating   = 0;
         const ratingLabels  = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" };
 
+        // ── Sidebar pin ───────────────────────────────────────────────────
+        const sidebar = document.getElementById('sidebar');
+        if (localStorage.getItem('sidebarPinned') === 'true') sidebar.classList.add('pinned');
+        function togglePin() {
+            sidebar.classList.toggle('pinned');
+            localStorage.setItem('sidebarPinned', sidebar.classList.contains('pinned'));
+            document.getElementById('pin-btn').querySelector('i').className =
+                sidebar.classList.contains('pinned') ? 'fas fa-times' : 'fas fa-thumbtack';
+        }
+
         function getUsernameFromToken(token) {
             try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
             catch { return "User"; }
@@ -173,6 +192,8 @@
             document.getElementById("header-avatar").src =
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             document.getElementById("sidebar-username").textContent = username;
+            document.getElementById("sidebar-avatar").src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             document.getElementById("nav-username").textContent = username;
             document.getElementById("nav-guest").classList.add("hidden");
             document.getElementById("nav-loggedin").classList.remove("hidden");
@@ -183,9 +204,51 @@
                     const user = await res.json();
                     if (user.profile_picture) {
                         document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                        document.getElementById("sidebar-avatar").src = `${API}/${user.profile_picture}`;
                     }
                 }
             } catch {}
+        }
+
+        function renderUserStats(reviews) {
+            if (reviews.length === 0) return;
+            const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+            const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+            reviews.forEach(r => counts[r.rating] = (counts[r.rating] || 0) + 1);
+            const breakdown = [5,4,3,2,1].map(star => {
+                const pct = Math.round((counts[star] / reviews.length) * 100);
+                return `
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-white/80 w-3">${star}</span>
+                        <i class="fas fa-star text-yellow-300 text-[9px]"></i>
+                        <div class="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                            <div class="bg-white h-full rounded-full" style="width:${pct}%"></div>
+                        </div>
+                        <span class="text-white/60 w-6 text-right">${pct}%</span>
+                    </div>`;
+            }).join("");
+
+            const statsCard = document.getElementById("user-stats-card");
+            statsCard.classList.remove("hidden");
+            statsCard.innerHTML = `
+                <div class="bg-gradient-to-br from-indigo-500 via-purple-500 to-indigo-600 rounded-[24px] p-6 text-white shadow-lg shadow-indigo-200">
+                    <div class="flex items-center gap-6">
+                        <div class="text-center flex-shrink-0">
+                            <p class="text-5xl font-extrabold leading-none">${avg.toFixed(1)}</p>
+                            <div class="flex justify-center gap-0.5 mt-2 text-yellow-300 text-sm">${renderStars(avg)}</div>
+                            <p class="text-xs text-white/70 mt-1">Your avg rating</p>
+                        </div>
+                        <div class="w-px self-stretch bg-white/20"></div>
+                        <div class="flex-shrink-0 text-center">
+                            <p class="text-4xl font-bold">${reviews.length}</p>
+                            <p class="text-xs text-white/70 mt-1">Total reviews</p>
+                        </div>
+                        <div class="w-px self-stretch bg-white/20 hidden sm:block"></div>
+                        <div class="flex-1 space-y-1.5 hidden sm:block">
+                            ${breakdown}
+                        </div>
+                    </div>
+                </div>`;
         }
 
         async function loadMyReviews() {
@@ -206,6 +269,7 @@
             }
 
             badge.textContent = `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+            renderUserStats(reviews);
 
             if (reviews.length === 0) {
                 container.innerHTML = `
