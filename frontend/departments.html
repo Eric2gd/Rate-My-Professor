@@ -82,6 +82,20 @@
                     </span>
                     <input id="search-input" type="search" placeholder="Filter by department..." class="block w-full pl-9 pr-3 py-2.5 text-sm">
                 </div>
+                <!-- Notification bell -->
+                <div id="notif-wrapper">
+                    <button class="glass-bell" id="notif-bell" onclick="toggleNotifications()">
+                        <i class="far fa-bell text-gray-600 text-base"></i>
+                        <span id="notif-badge" class="notif-badge hidden"></span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown hidden">
+                        <div class="notif-header">
+                            <h3>Notifications</h3>
+                            <span id="notif-header-count" class="notif-header-count hidden"></span>
+                        </div>
+                        <div id="notif-list" class="notif-list"></div>
+                    </div>
+                </div>
                 <div class="glass-user-chip">
                     <img id="header-avatar" class="h-9 w-9 rounded-xl object-cover border-2 border-white/70"
                          src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
@@ -294,5 +308,6 @@
         initUser();
         loadDepartments();
     </script>
+    <script src="notifications.js"></script>
 </body>
 </html>

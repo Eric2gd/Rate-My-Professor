@@ -70,12 +70,22 @@
                 <span id="breadcrumb-name" class="text-sm font-semibold text-gray-800">Professor Profile</span>
             </div>
 
-            <div class="flex items-center gap-6">
-                <button class="text-gray-400 hover:text-gray-600 relative">
-                    <i class="far fa-bell text-xl"></i>
-                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-                <div class="flex items-center gap-3 border-l pl-6">
+            <div class="flex items-center gap-4">
+                <!-- Notification bell -->
+                <div id="notif-wrapper">
+                    <button class="glass-bell" id="notif-bell" onclick="toggleNotifications()">
+                        <i class="far fa-bell text-gray-600 text-base"></i>
+                        <span id="notif-badge" class="notif-badge hidden"></span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown hidden">
+                        <div class="notif-header">
+                            <h3>Notifications</h3>
+                            <span id="notif-header-count" class="notif-header-count hidden"></span>
+                        </div>
+                        <div id="notif-list" class="notif-list"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 border-l pl-4">
                     <div class="text-right">
                         <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
                         <p class="text-xs text-gray-400">View Profile</p>
@@ -544,5 +554,6 @@
             loadReviews(professorId);
         })();
     </script>
+    <script src="notifications.js"></script>
 </body>
 </html>

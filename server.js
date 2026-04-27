@@ -53,6 +53,19 @@ const db = mysql.createConnection({
 db.connect(err => {
   if (err) throw err;
   console.log("Database connected!");
+  db.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      username VARCHAR(100) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      message TEXT NOT NULL,
+      link VARCHAR(255) DEFAULT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_notifications_username (username)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("notifications table error:", err); });
 });
 
 // =========================
@@ -168,9 +181,25 @@ app.post("/professors", authenticateToken, (req, res) => {
   db.query("INSERT INTO professors (name, department_id) VALUES (?, ?)", [name, department_id], (err, result) => {
     if (err) return res.status(500).json({ message: "Error adding professor" });
 
+    const profId = result.insertId;
+
+    // Notify all users about the new lecturer
+    db.query("SELECT username FROM users", (err2, users) => {
+      if (!err2 && users.length > 0) {
+        const link = `/professor-profile.html?id=${profId}`;
+        const message = `New lecturer added: ${name}`;
+        users.forEach(u => {
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'professor_added', ?, ?)",
+            [u.username, message, link]
+          );
+        });
+      }
+    });
+
     res.json({
       message: "Professor added",
-      professor: { id: result.insertId, name, department_id }
+      professor: { id: profId, name, department_id }
     });
   });
 });
@@ -340,6 +369,22 @@ app.post("/replies", authenticateToken, (req, res) => {
     [review_id, req.user.username, reply_text],
     (err, result) => {
       if (err) return res.status(500).json({ message: "Error saving reply" });
+
+      // Notify the review author (if different from replier)
+      db.query(
+        "SELECT r.username, r.professor_id FROM reviews r WHERE r.id = ?",
+        [review_id],
+        (err2, rows) => {
+          if (!err2 && rows.length > 0 && rows[0].username !== req.user.username) {
+            const link = `/professor-profile.html?id=${rows[0].professor_id}`;
+            db.query(
+              "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
+              [rows[0].username, `${req.user.username} replied to your review`, link]
+            );
+          }
+        }
+      );
+
       res.json({
         message: "Reply posted",
         reply: { id: result.insertId, review_id, username: req.user.username, reply_text }
@@ -424,6 +469,34 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
     (err) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json({ message: "Professor picture updated", profile_picture: picturePath });
+    }
+  );
+});
+
+// =========================
+// GET NOTIFICATIONS (Protected)
+// =========================
+app.get("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT * FROM notifications WHERE username = ? ORDER BY created_at DESC LIMIT 50",
+    [req.user.username],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// MARK NOTIFICATIONS READ (Protected)
+// =========================
+app.put("/notifications/mark-read", authenticateToken, (req, res) => {
+  db.query(
+    "UPDATE notifications SET is_read = 1 WHERE username = ? AND is_read = 0",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications marked as read" });
     }
   );
 });

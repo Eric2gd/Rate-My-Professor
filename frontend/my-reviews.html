@@ -75,12 +75,28 @@
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <span class="text-sm font-semibold text-gray-800">My Reviews</span>
             </div>
-            <div class="glass-user-chip">
-                <img id="header-avatar" class="h-9 w-9 rounded-xl object-cover border-2 border-white/70"
-                     src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
-                <div class="text-left">
-                    <p id="header-username" class="text-sm font-bold text-gray-800 leading-tight">Guest</p>
-                    <a href="settings.html" class="text-xs text-indigo-500 hover:underline leading-tight">View Profile</a>
+            <div class="flex items-center gap-3">
+                <!-- Notification bell -->
+                <div id="notif-wrapper">
+                    <button class="glass-bell" id="notif-bell" onclick="toggleNotifications()">
+                        <i class="far fa-bell text-gray-600 text-base"></i>
+                        <span id="notif-badge" class="notif-badge hidden"></span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown hidden">
+                        <div class="notif-header">
+                            <h3>Notifications</h3>
+                            <span id="notif-header-count" class="notif-header-count hidden"></span>
+                        </div>
+                        <div id="notif-list" class="notif-list"></div>
+                    </div>
+                </div>
+                <div class="glass-user-chip">
+                    <img id="header-avatar" class="h-9 w-9 rounded-xl object-cover border-2 border-white/70"
+                         src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
+                    <div class="text-left">
+                        <p id="header-username" class="text-sm font-bold text-gray-800 leading-tight">Guest</p>
+                        <a href="settings.html" class="text-xs text-indigo-500 hover:underline leading-tight">View Profile</a>
+                    </div>
                 </div>
             </div>
         </header>
@@ -404,5 +420,6 @@
 
         initUser().then(() => loadMyReviews());
     </script>
+    <script src="notifications.js"></script>
 </body>
 </html>
