@@ -54,6 +54,18 @@ db.connect(err => {
   if (err) throw err;
   console.log("Database connected!");
   db.query(`
+    CREATE TABLE IF NOT EXISTS review_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      review_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_review_user (review_id, username),
+      KEY idx_review_likes_review_id (review_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("review_likes table error:", err); });
+
+  db.query(`
     CREATE TABLE IF NOT EXISTS reply_likes (
       id INT(11) NOT NULL AUTO_INCREMENT,
       reply_id INT(11) NOT NULL,
@@ -230,20 +242,30 @@ app.post("/professors", authenticateToken, (req, res) => {
 // ?professor_id=X  → reviews for one professor
 // (no param)       → global feed (all reviews, newest first, with professor name)
 // =========================
-app.get("/reviews", (req, res) => {
+app.get("/reviews", optionalAuth, (req, res) => {
   const { professor_id } = req.query;
+  const viewer = req.user ? req.user.username : null;
+
+  const likesCols = `
+    COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+    COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+    MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote`;
 
   if (professor_id) {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
        WHERE r.professor_id = ?
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC`,
-      [professor_id],
+      [viewer, professor_id],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -251,14 +273,19 @@ app.get("/reviews", (req, res) => {
     );
   } else {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC
        LIMIT 50`,
+      [viewer],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -299,11 +326,17 @@ app.post("/reviews", authenticateToken, (req, res) => {
 // =========================
 app.get("/reviews/mine", authenticateToken, (req, res) => {
   db.query(
-    `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+    `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+            p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes
      FROM reviews r
      JOIN professors p ON r.professor_id = p.id
      LEFT JOIN departments d ON p.department_id = d.id
+     LEFT JOIN review_likes rl ON r.id = rl.review_id
      WHERE r.username = ?
+     GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name, d.name
      ORDER BY r.created_at DESC`,
     [req.user.username],
     (err, results) => {
@@ -498,6 +531,56 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
     (err) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json({ message: "Professor picture updated", profile_picture: picturePath });
+    }
+  );
+});
+
+// =========================
+// REACT TO REVIEW — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/reviews/:id/react", authenticateToken, (req, res) => {
+  const reviewId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM review_likes WHERE review_id = ?`,
+      [req.user.username, reviewId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
+    [reviewId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          db.query("DELETE FROM review_likes WHERE review_id = ? AND username = ?",
+            [reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+        } else {
+          db.query("UPDATE review_likes SET value = ? WHERE review_id = ? AND username = ?",
+            [value, reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+        }
+      } else {
+        db.query("INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)",
+          [reviewId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+      }
     }
   );
 });

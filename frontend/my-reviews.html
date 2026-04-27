@@ -316,7 +316,16 @@
                                     <div class="flex text-sm">${renderStars(r.rating)}</div>
                                     <span class="text-xs text-gray-400">${date}</span>
                                 </div>
-                                <p class="text-gray-600 text-sm leading-relaxed">${escapeHtml(r.review_text)}</p>
+                                <p class="text-gray-600 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
+                                <!-- Reaction totals (read-only — it's your own review) -->
+                                <div class="flex items-center gap-2">
+                                    <span class="react-btn react-sm" style="cursor:default">
+                                        <i class="fas fa-thumbs-up"></i> ${r.likes || 0}
+                                    </span>
+                                    <span class="react-btn react-sm" style="cursor:default">
+                                        <i class="fas fa-thumbs-down"></i> ${r.dislikes || 0}
+                                    </span>
+                                </div>
                             </div>
                             <div class="flex flex-col gap-2 flex-shrink-0">
                                 <button onclick="openEditModal(${r.id}, '${escapeHtml(r.professor_name)}', ${r.rating}, ${JSON.stringify(r.review_text)})"
@@ -372,15 +381,15 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
                             <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
-                            <div class="flex items-center gap-3 mt-1.5">
+                            <div class="flex items-center gap-2 mt-2">
                                 <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
-                                    class="flex items-center gap-1 text-xs transition ${likeClass}">
-                                    <i class="fas fa-thumbs-up text-[10px]"></i>
+                                    class="react-btn react-sm ${likeClass}">
+                                    <i class="fas fa-thumbs-up"></i>
                                     <span id="like-count-${rp.id}">${rp.likes || 0}</span>
                                 </button>
                                 <button id="dislike-btn-${rp.id}" onclick="reactToReply(${rp.id}, -1)"
-                                    class="flex items-center gap-1 text-xs transition ${dislikeClass}">
-                                    <i class="fas fa-thumbs-down text-[10px]"></i>
+                                    class="react-btn react-sm ${dislikeClass}">
+                                    <i class="fas fa-thumbs-down"></i>
                                     <span id="dislike-count-${rp.id}">${rp.dislikes || 0}</span>
                                 </button>
                             </div>
@@ -403,8 +412,8 @@
             document.getElementById(`dislike-count-${replyId}`).textContent = data.dislikes;
             const lb  = document.getElementById(`like-btn-${replyId}`);
             const dlb = document.getElementById(`dislike-btn-${replyId}`);
-            if (lb)  lb.className  = `flex items-center gap-1 text-xs transition ${data.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600"}`;
-            if (dlb) dlb.className = `flex items-center gap-1 text-xs transition ${data.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500"}`;
+            if (lb)  lb.className  = `react-btn react-sm ${data.my_vote === 1  ? "like-active"    : ""}`;
+            if (dlb) dlb.className = `react-btn react-sm ${data.my_vote === -1 ? "dislike-active" : ""}`;
         }
 
         async function toggleMyReviewReplies(reviewId) {
