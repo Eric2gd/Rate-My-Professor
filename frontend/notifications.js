@@ -1,7 +1,7 @@
 const NOTIF_API = 'http://localhost:3000';
 
 function _timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff  = Date.now() - new Date(dateStr).getTime();
     const mins  = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days  = Math.floor(diff / 86400000);
@@ -65,8 +65,12 @@ async function toggleNotifications() {
         return;
     }
 
-    dropdown.classList.remove('hidden');
-    overlay.classList.remove('hidden');
+    // Reveal & animate in
+    dropdown.classList.remove('hidden', 'closing');
+    overlay.classList.remove('hidden', 'closing');
+    void dropdown.offsetWidth; // force reflow so animation restarts cleanly
+    dropdown.classList.add('opening');
+    overlay.classList.add('opening');
 
     await _renderNotifications();
 
@@ -85,8 +89,19 @@ async function toggleNotifications() {
 function closeNotifications() {
     const dropdown = document.getElementById('notif-dropdown');
     const overlay  = document.getElementById('notif-overlay');
-    if (dropdown) dropdown.classList.add('hidden');
-    if (overlay)  overlay.classList.add('hidden');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+
+    dropdown.classList.remove('opening');
+    overlay.classList.remove('opening');
+    dropdown.classList.add('closing');
+    overlay.classList.add('closing');
+
+    setTimeout(() => {
+        dropdown.classList.add('hidden');
+        overlay.classList.add('hidden');
+        dropdown.classList.remove('closing');
+        overlay.classList.remove('closing');
+    }, 200);
 }
 
 async function _renderNotifications() {
@@ -117,12 +132,13 @@ async function _renderNotifications() {
             return;
         }
 
-        list.innerHTML = notifs.map(n => {
+        list.innerHTML = notifs.map((n, i) => {
             const { cls, fa } = _iconFor(n.type);
-            const tag    = n.link ? 'a' : 'div';
-            const href   = n.link ? `href="${n.link}"` : '';
+            const tag  = n.link ? 'a' : 'div';
+            const href = n.link ? `href="${n.link}"` : '';
             return `
-                <${tag} class="notif-item${n.is_read ? '' : ' unread'}" ${href}>
+                <${tag} class="notif-item${n.is_read ? '' : ' unread'} rmp-anim"
+                        style="animation-delay:${i * 0.05}s" ${href}>
                     <div class="notif-icon ${cls}"><i class="fas ${fa}"></i></div>
                     <div class="notif-body">
                         <p>${n.message}</p>
@@ -135,7 +151,7 @@ async function _renderNotifications() {
     }
 }
 
-// Create the overlay element once at load time
+// Bootstrap: create overlay + fetch count once DOM is ready
 (function _init() {
     document.addEventListener('DOMContentLoaded', () => {
         const overlay = document.createElement('div');

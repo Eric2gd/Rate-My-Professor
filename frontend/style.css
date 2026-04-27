@@ -305,8 +305,37 @@ body {
 }
 
 /* ══════════════════════════════════════════
+   PAGE TILE ENTRANCE ANIMATION
+   ══════════════════════════════════════════ */
+
+@keyframes rmpFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+.rmp-anim {
+    animation: rmpFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ══════════════════════════════════════════
    NOTIFICATION DROPDOWN
    ══════════════════════════════════════════ */
+
+@keyframes notifDropIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+@keyframes notifDropOut {
+    from { opacity: 1; transform: translateY(0)     scale(1);    }
+    to   { opacity: 0; transform: translateY(-10px) scale(0.96); }
+}
+@keyframes notifOverlayIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes notifOverlayOut { from { opacity: 1; } to { opacity: 0; } }
+
+.notif-dropdown.opening { animation: notifDropIn  0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.notif-dropdown.closing { animation: notifDropOut 0.18s cubic-bezier(0.4, 0, 1, 1)    both; }
+.notif-overlay.opening  { animation: notifOverlayIn  0.2s ease both; }
+.notif-overlay.closing  { animation: notifOverlayOut 0.2s ease both; }
 
 #notif-wrapper {
     position: relative;
@@ -446,13 +475,11 @@ body {
     font-size: 13px;
 }
 
-/* Full-screen blur overlay behind the dropdown */
+/* Full-screen overlay — dims the page but only the panel itself blurs its own background */
 .notif-overlay {
     position: fixed;
     inset: 0;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    background: rgba(15,23,42,0.12);
+    background: rgba(15,23,42,0.08);
     z-index: 500;
 }
 

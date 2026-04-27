@@ -238,7 +238,7 @@
                 ? depts.filter(([name]) => name === filter)
                 : depts;
 
-            container.innerHTML = filtered.map(([name, data]) => {
+            container.innerHTML = filtered.map(([name, data], i) => {
                 const avg = data.ratings.length
                     ? (data.ratings.reduce((s, r) => s + r, 0) / data.ratings.length)
                     : null;
@@ -247,7 +247,8 @@
                 const sorted = [...data.professors].sort((a, b) => a.name.localeCompare(b.name));
 
                 return `
-                    <div class="bg-white rounded-[32px] shadow-sm border border-gray-50 dept-card" data-dept="${escapeHtml(name)}">
+                    <div class="rmp-anim bg-white rounded-[32px] shadow-sm border border-gray-50 dept-card"
+                         data-dept="${escapeHtml(name)}" style="animation-delay:${i * 0.08}s">
                         <!-- Department header (click to toggle) -->
                         <div class="flex items-center justify-between p-8 cursor-pointer select-none dept-header"
                              onclick="toggleDept(this)">
