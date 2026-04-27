@@ -54,6 +54,18 @@ db.connect(err => {
   if (err) throw err;
   console.log("Database connected!");
   db.query(`
+    CREATE TABLE IF NOT EXISTS reply_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      reply_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_reply_user (reply_id, username),
+      KEY idx_reply_likes_reply_id (reply_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("reply_likes table error:", err); });
+
+  db.query(`
     CREATE TABLE IF NOT EXISTS notifications (
       id INT(11) NOT NULL AUTO_INCREMENT,
       username VARCHAR(100) NOT NULL,
@@ -133,6 +145,15 @@ app.post("/login", async (req, res) => {
 // =========================
 // AUTH MIDDLEWARE
 // =========================
+function optionalAuth(req, res, next) {
+  const token = (req.headers["authorization"] || "").split(" ")[1];
+  if (!token) { req.user = null; return next(); }
+  jwt.verify(token, SECRET, (err, user) => {
+    req.user = err ? null : user;
+    next();
+  });
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -336,17 +357,25 @@ app.delete("/reviews/:id", authenticateToken, (req, res) => {
 // =========================
 // GET REPLIES (by review)
 // =========================
-app.get("/replies", (req, res) => {
+app.get("/replies", optionalAuth, (req, res) => {
   const { review_id } = req.query;
   if (!review_id) return res.status(400).json({ message: "review_id is required" });
 
+  const viewer = req.user ? req.user.username : null;
+
   db.query(
-    `SELECT rp.*, u.profile_picture AS user_picture
+    `SELECT rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at,
+            u.profile_picture AS user_picture,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+            MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote
      FROM replies rp
      LEFT JOIN users u ON rp.username = u.username
+     LEFT JOIN reply_likes rl ON rp.id = rl.reply_id
      WHERE rp.review_id = ?
+     GROUP BY rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at, u.profile_picture
      ORDER BY rp.created_at ASC`,
-    [review_id],
+    [viewer, review_id],
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json(results);
@@ -376,7 +405,7 @@ app.post("/replies", authenticateToken, (req, res) => {
         [review_id],
         (err2, rows) => {
           if (!err2 && rows.length > 0 && rows[0].username !== req.user.username) {
-            const link = `/professor-profile.html?id=${rows[0].professor_id}`;
+            const link = `/professor-profile.html?id=${rows[0].professor_id}&review=${review_id}`;
             db.query(
               "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
               [rows[0].username, `${req.user.username} replied to your review`, link]
@@ -469,6 +498,63 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
     (err) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json({ message: "Professor picture updated", profile_picture: picturePath });
+    }
+  );
+});
+
+// =========================
+// REACT TO REPLY — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/replies/:id/react", authenticateToken, (req, res) => {
+  const replyId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM reply_likes WHERE reply_id = ?`,
+      [req.user.username, replyId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
+    [replyId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          db.query(
+            "DELETE FROM reply_likes WHERE reply_id = ? AND username = ?",
+            [replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          );
+        } else {
+          db.query(
+            "UPDATE reply_likes SET value = ? WHERE reply_id = ? AND username = ?",
+            [value, replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          );
+        }
+      } else {
+        db.query(
+          "INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)",
+          [replyId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+        );
+      }
     }
   );
 });

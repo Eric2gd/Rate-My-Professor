@@ -137,7 +137,7 @@
             const body  = header.nextElementSibling;   // .dept-body
             const arrow = header.querySelector(".dept-arrow");
             const isHidden = body.classList.toggle("hidden");
-            arrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+            arrow.style.transform = isHidden ? "rotate(0deg)" : "rotate(180deg)";
         }
 
         function getUsernameFromToken(token) {
@@ -268,12 +268,12 @@
                                         ${avg ? renderStars(avg) : '<span class="text-xs text-gray-400">No ratings yet</span>'}
                                     </div>
                                 </div>
-                                <i class="fas fa-chevron-up text-gray-400 text-sm dept-arrow transition-transform duration-200"></i>
+                                <i class="fas fa-chevron-down text-gray-400 text-sm dept-arrow transition-transform duration-200"></i>
                             </div>
                         </div>
 
                         <!-- Collapsible professors grid -->
-                        <div class="dept-body px-8 pb-8">
+                        <div class="dept-body hidden px-8 pb-8">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 ${sorted.map(p => {
                                     const avatarSrc = p.profile_picture

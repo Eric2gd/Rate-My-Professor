@@ -329,8 +329,109 @@
                                 </button>
                             </div>
                         </div>
+                        <!-- Replies toggle -->
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <button onclick="toggleMyReviewReplies(${r.id})"
+                                class="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-indigo-600 transition">
+                                <i class="far fa-comment text-[10px]"></i>
+                                <span id="mr-reply-count-${r.id}">Loading…</span>
+                                <i id="mr-reply-chev-${r.id}" class="fas fa-chevron-down text-[9px] transition-transform duration-200 ml-1"></i>
+                            </button>
+                            <div id="mr-replies-${r.id}" class="hidden mt-3 space-y-3 pl-2 border-l-2 border-indigo-50"></div>
+                        </div>
                     </div>`;
             }).join("");
+
+            // Eagerly fetch reply counts for each card
+            reviews.forEach(r => {
+                const token = localStorage.getItem("token");
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                fetch(`${API}/replies?review_id=${r.id}`, { headers })
+                    .then(res => res.json())
+                    .then(replies => {
+                        const el = document.getElementById(`mr-reply-count-${r.id}`);
+                        if (el) el.textContent = replies.length === 0
+                            ? "No replies yet"
+                            : `${replies.length} repl${replies.length !== 1 ? "ies" : "y"}`;
+                    });
+            });
+        }
+
+        // ── Reply rendering helpers ─────────────────────────────────────────
+        function renderRepliesHtml(replies) {
+            return replies.map(rp => {
+                const avatarUrl = rp.user_picture
+                    ? `${API}/${rp.user_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
+                const date = new Date(rp.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                const likeClass    = rp.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600";
+                const dislikeClass = rp.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500";
+                return `
+                    <div class="flex gap-3 items-start">
+                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
+                            <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
+                            <div class="flex items-center gap-3 mt-1.5">
+                                <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
+                                    class="flex items-center gap-1 text-xs transition ${likeClass}">
+                                    <i class="fas fa-thumbs-up text-[10px]"></i>
+                                    <span id="like-count-${rp.id}">${rp.likes || 0}</span>
+                                </button>
+                                <button id="dislike-btn-${rp.id}" onclick="reactToReply(${rp.id}, -1)"
+                                    class="flex items-center gap-1 text-xs transition ${dislikeClass}">
+                                    <i class="fas fa-thumbs-down text-[10px]"></i>
+                                    <span id="dislike-count-${rp.id}">${rp.dislikes || 0}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        async function reactToReply(replyId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/replies/${replyId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`like-count-${replyId}`).textContent    = data.likes;
+            document.getElementById(`dislike-count-${replyId}`).textContent = data.dislikes;
+            const lb  = document.getElementById(`like-btn-${replyId}`);
+            const dlb = document.getElementById(`dislike-btn-${replyId}`);
+            if (lb)  lb.className  = `flex items-center gap-1 text-xs transition ${data.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600"}`;
+            if (dlb) dlb.className = `flex items-center gap-1 text-xs transition ${data.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500"}`;
+        }
+
+        async function toggleMyReviewReplies(reviewId) {
+            const container = document.getElementById(`mr-replies-${reviewId}`);
+            const chev      = document.getElementById(`mr-reply-chev-${reviewId}`);
+            if (!container.classList.contains("hidden")) {
+                container.classList.add("hidden");
+                chev.style.transform = "";
+                return;
+            }
+            container.classList.remove("hidden");
+            chev.style.transform = "rotate(180deg)";
+            container.innerHTML = `<p class="text-xs text-gray-400">Loading…</p>`;
+
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res     = await fetch(`${API}/replies?review_id=${reviewId}`, { headers });
+            const replies = await res.json();
+
+            const countEl = document.getElementById(`mr-reply-count-${reviewId}`);
+            if (countEl) countEl.textContent = replies.length === 0
+                ? "No replies yet"
+                : `${replies.length} repl${replies.length !== 1 ? "ies" : "y"}`;
+
+            container.innerHTML = replies.length === 0
+                ? `<p class="text-xs text-gray-400 italic">No replies yet.</p>`
+                : renderRepliesHtml(replies);
         }
 
         // ── Edit modal ──────────────────────────────────────────────────────

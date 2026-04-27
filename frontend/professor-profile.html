@@ -316,7 +316,7 @@
                     ? `${API}/${r.user_picture}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 return `
-                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""}">
+                    <div id="review-${r.id}" class="${i > 0 ? "border-t border-gray-50 pt-8" : ""}">
                         <div class="flex gap-6">
                             <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
                                  src="${avatarUrl}" alt="${escapeHtml(r.username)}">
@@ -433,6 +433,56 @@
             }
         }
 
+        // ── Shared reply renderer with like/dislike ──────────────────────────
+        function renderRepliesHtml(replies) {
+            return replies.map(rp => {
+                const avatarUrl = rp.user_picture
+                    ? `${API}/${rp.user_picture}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
+                const date = new Date(rp.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                const likeClass    = rp.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600";
+                const dislikeClass = rp.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500";
+                return `
+                    <div class="flex gap-3 items-start">
+                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
+                            <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
+                            <div class="flex items-center gap-3 mt-1.5">
+                                <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
+                                    class="flex items-center gap-1 text-xs transition ${likeClass}">
+                                    <i class="fas fa-thumbs-up text-[10px]"></i>
+                                    <span id="like-count-${rp.id}">${rp.likes || 0}</span>
+                                </button>
+                                <button id="dislike-btn-${rp.id}" onclick="reactToReply(${rp.id}, -1)"
+                                    class="flex items-center gap-1 text-xs transition ${dislikeClass}">
+                                    <i class="fas fa-thumbs-down text-[10px]"></i>
+                                    <span id="dislike-count-${rp.id}">${rp.dislikes || 0}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        async function reactToReply(replyId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/replies/${replyId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`like-count-${replyId}`).textContent    = data.likes;
+            document.getElementById(`dislike-count-${replyId}`).textContent = data.dislikes;
+            const lb = document.getElementById(`like-btn-${replyId}`);
+            const db_ = document.getElementById(`dislike-btn-${replyId}`);
+            if (lb)  lb.className  = `flex items-center gap-1 text-xs transition ${data.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600"}`;
+            if (db_) db_.className = `flex items-center gap-1 text-xs transition ${data.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500"}`;
+        }
+
         // ── Replies ─────────────────────────────────────────────────────────
         async function toggleReplies(reviewId) {
             const container = document.getElementById(`replies-${reviewId}`);
@@ -443,7 +493,9 @@
             container.classList.remove("hidden");
             container.innerHTML = `<p class="text-xs text-gray-400">Loading...</p>`;
 
-            const res = await fetch(`${API}/replies?review_id=${reviewId}`);
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${API}/replies?review_id=${reviewId}`, { headers });
             const replies = await res.json();
 
             document.getElementById(`reply-count-${reviewId}`).textContent =
@@ -454,22 +506,7 @@
                 return;
             }
 
-            container.innerHTML = replies.map(rp => {
-                const avatarUrl = rp.user_picture
-                    ? `${API}/${rp.user_picture}`
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
-                const date = new Date(rp.created_at).toLocaleDateString("en-GB", {
-                    day: "numeric", month: "short", year: "numeric"
-                });
-                return `
-                    <div class="flex gap-3 items-start">
-                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
-                        <div>
-                            <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
-                            <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(rp.reply_text)}</p>
-                        </div>
-                    </div>`;
-            }).join("");
+            container.innerHTML = renderRepliesHtml(replies);
         }
 
         function toggleReplyBox(reviewId) {
@@ -551,7 +588,16 @@
 
             initUser();
             loadProfessor(professorId);
-            loadReviews(professorId);
+            loadReviews(professorId).then(() => {
+                const targetId = new URLSearchParams(window.location.search).get("review");
+                if (!targetId) return;
+                const el = document.getElementById(`review-${targetId}`);
+                if (!el) return;
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.classList.add("review-highlight");
+                }, 400);
+            });
         })();
     </script>
     <script src="notifications.js"></script>
