@@ -71,9 +71,14 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col">
         <!-- Top Navigation -->
-        <header class="h-16 flex items-center justify-between px-6 glass-header">
-            <!-- Glass search bar -->
-            <div class="glass-search relative w-80">
+        <header class="h-16 flex items-center justify-between px-4 sm:px-6 glass-header">
+            <!-- Mobile logo (visible only when search is hidden) -->
+            <div class="flex items-center gap-2 sm:hidden">
+                <div class="rmp-logo-icon" style="width:34px;height:34px;font-size:14px"><i class="fas fa-university"></i></div>
+                <span class="text-base font-bold text-gray-800">RateMyProf</span>
+            </div>
+            <!-- Glass search bar (hidden on mobile) -->
+            <div class="glass-search relative w-80 hidden sm:flex items-center">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
                     <i class="fas fa-search text-sm"></i>
                 </span>
@@ -81,11 +86,20 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <!-- Glass bell -->
-                <button class="glass-bell">
-                    <i class="far fa-bell text-gray-600 text-base"></i>
-                    <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button>
+                <!-- Notification bell -->
+                <div id="notif-wrapper">
+                    <button class="glass-bell" id="notif-bell" onclick="toggleNotifications()">
+                        <i class="far fa-bell text-gray-600 text-base"></i>
+                        <span id="notif-badge" class="notif-badge hidden"></span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown hidden">
+                        <div class="notif-header">
+                            <h3>Notifications</h3>
+                            <span id="notif-header-count" class="notif-header-count hidden"></span>
+                        </div>
+                        <div id="notif-list" class="notif-list"></div>
+                    </div>
+                </div>
 
                 <!-- Glass user chip -->
                 <div class="glass-user-chip">
@@ -103,13 +117,13 @@
         </header>
 
         <!-- Dashboard Grid -->
-        <div class="p-8 grid grid-cols-12 gap-8">
+        <div class="p-4 sm:p-8 grid grid-cols-12 gap-4 sm:gap-8">
 
-            <!-- Left Column: Stats -->
-            <div class="col-span-12 lg:col-span-4 space-y-8">
+            <!-- Left Column: Stats (shows second on mobile) -->
+            <div class="col-span-12 lg:col-span-4 space-y-8 order-2 lg:order-1">
 
                 <!-- Overall Rating Card -->
-                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col items-center">
+                <div class="rmp-anim bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex flex-col items-center" style="animation-delay:0.05s">
                     <div class="bg-indigo-50 p-4 rounded-full mb-4">
                         <i class="fas fa-users text-indigo-500 text-2xl"></i>
                     </div>
@@ -125,7 +139,7 @@
                 </div>
 
                 <!-- Departments + Professors Card -->
-                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50" id="professors-section">
+                <div class="rmp-anim bg-white p-8 rounded-[32px] shadow-sm border border-gray-50" id="professors-section" style="animation-delay:0.12s">
                     <!-- Tabs -->
                     <div class="flex gap-2 mb-6">
                         <button id="tab-dept" onclick="switchTab('dept')"
@@ -160,11 +174,11 @@
                 </div>
             </div>
 
-            <!-- Right Column: Banner + Reviews Feed -->
-            <div class="col-span-12 lg:col-span-8 space-y-8">
+            <!-- Right Column: Banner + Reviews Feed (shows first on mobile) -->
+            <div class="col-span-12 lg:col-span-8 flex flex-col gap-8 order-1 lg:order-2">
 
                 <!-- Promo Banner -->
-                <div class="relative bg-indigo-600 rounded-[32px] p-10 overflow-hidden text-white flex justify-between items-center h-48 shadow-xl shadow-indigo-100">
+                <div class="rmp-anim relative bg-indigo-600 rounded-[32px] p-10 overflow-hidden text-white flex justify-between items-center h-48 shadow-xl shadow-indigo-100" style="animation-delay:0.05s">
                     <div class="relative z-10">
                         <h2 class="text-3xl font-bold mb-2 tracking-tight">Rate Your Professors</h2>
                         <p class="text-lg opacity-90 font-medium mb-4">Ashesi University</p>
@@ -178,17 +192,18 @@
                 </div>
 
                 <!-- Reviews Feed -->
-                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" id="reviews-section">
-                    <div class="flex items-center justify-between mb-8">
+                <div class="rmp-anim flex-1 flex flex-col min-h-0 bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" id="reviews-section" style="animation-delay:0.12s">
+                    <div class="flex items-center justify-between mb-6 flex-shrink-0">
                         <h3 class="text-gray-800 font-bold text-lg">Recent Reviews</h3>
                         <span id="feed-count" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
                     </div>
-                    <div id="reviews-feed" class="space-y-8">
+                    <div id="reviews-feed" class="overflow-y-auto flex-1 min-h-0 pr-1">
                         <p class="text-gray-400 text-sm text-center py-8">No reviews yet.</p>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="mobile-nav-spacer lg:hidden flex-shrink-0"></div>
     </main>
 
     <script>
@@ -317,9 +332,10 @@
             }
 
             const preview = professors.slice(0, 6);
-            list.innerHTML = preview.map(p => `
+            list.innerHTML = preview.map((p, i) => `
                 <a href="professor-profile.html?id=${p.id}"
-                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group">
+                   class="rmp-anim flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition group"
+                   style="animation-delay:${i * 0.06}s">
                     <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-chalkboard-teacher text-indigo-500 text-sm"></i>
                     </div>
@@ -358,6 +374,7 @@
                 return;
             }
             list.innerHTML = depts.map(([name, data], idx) => {
+                const animDelay = `animation-delay:${idx * 0.07}s`;
                 const avg = data.ratings.length
                     ? (data.ratings.reduce((s, r) => s + r, 0) / data.ratings.length).toFixed(1)
                     : "N/A";
@@ -375,7 +392,7 @@
                         +${data.professors.length - 5} more professors →
                     </a>` : '';
                 return `
-                    <div class="rounded-2xl border border-gray-100 overflow-hidden bg-white">
+                    <div class="rmp-anim rounded-2xl border border-gray-100 overflow-hidden bg-white" style="${animDelay}">
                         <button onclick="toggleDeptAccordion(${idx})"
                             class="w-full flex items-center gap-3 p-3 hover:bg-indigo-50 transition text-left group">
                             <div class="bg-indigo-100 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0">
@@ -410,8 +427,28 @@
             }
         }
 
+        async function reactToReply(replyId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/replies/${replyId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`like-count-${replyId}`).textContent    = data.likes;
+            document.getElementById(`dislike-count-${replyId}`).textContent = data.dislikes;
+            const lb  = document.getElementById(`like-btn-${replyId}`);
+            const dlb = document.getElementById(`dislike-btn-${replyId}`);
+            if (lb)  lb.className  = `react-btn react-sm ${data.my_vote === 1  ? "like-active"    : ""}`;
+            if (dlb) dlb.className = `react-btn react-sm ${data.my_vote === -1 ? "dislike-active" : ""}`;
+        }
+
         async function loadReplies(reviewId) {
-            const res = await fetch(`${API}/replies?review_id=${reviewId}`);
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${API}/replies?review_id=${reviewId}`, { headers });
             const replies = await res.json();
             replyLoaded[reviewId] = true;
 
@@ -431,23 +468,36 @@
                     const av = rep.user_picture
                         ? `${API}/${rep.user_picture}`
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.username)}&background=e0e7ff&color=4338ca&size=32`;
+                    const lc = rep.my_vote === 1  ? "like-active"    : "";
+                    const dc = rep.my_vote === -1 ? "dislike-active" : "";
                     return `
-                        <div class="flex gap-2 items-start">
-                            <img class="w-7 h-7 rounded-full object-cover flex-shrink-0 border-2 border-white"
-                                 src="${av}" alt="">
-                            <div class="flex-1 reply-bubble">
+                        <div class="flex gap-2">
+                            <div class="flex flex-col items-center flex-shrink-0" style="width:28px">
+                                <img class="w-7 h-7 rounded-full object-cover border-2 border-white" src="${av}" alt="">
+                                <div class="w-0.5 bg-gray-100 flex-1 mt-1 rounded-full" style="min-height:10px"></div>
+                            </div>
+                            <div class="flex-1 pb-2">
                                 <span class="text-xs font-bold text-gray-700">${escapeHtml(rep.username)}</span>
                                 <span class="text-[10px] text-gray-400 ml-2">${d}</span>
                                 <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(rep.reply_text)}</p>
+                                <div class="flex items-center gap-1.5 mt-1.5">
+                                    <button id="like-btn-${rep.id}" onclick="reactToReply(${rep.id}, 1)"
+                                        class="react-btn react-sm ${lc}">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        <span id="like-count-${rep.id}">${rep.likes || 0}</span>
+                                    </button>
+                                    <button id="dislike-btn-${rep.id}" onclick="reactToReply(${rep.id}, -1)"
+                                        class="react-btn react-sm ${dc}">
+                                        <i class="fas fa-thumbs-down"></i>
+                                        <span id="dislike-count-${rep.id}">${rep.dislikes || 0}</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                 }).join("");
             }
 
-            // Show reply form if logged in
-            if (localStorage.getItem("token")) {
-                form.style.display = 'flex';
-            }
+            if (token) form.style.display = 'flex';
         }
 
         async function submitReply(reviewId) {
@@ -470,8 +520,28 @@
         }
 
         // ── Load global reviews feed ──────────────────────────────────────
+        async function reactToReview(reviewId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/reviews/${reviewId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`rev-like-count-${reviewId}`).textContent    = data.likes;
+            document.getElementById(`rev-dislike-count-${reviewId}`).textContent = data.dislikes;
+            const lb  = document.getElementById(`rev-like-btn-${reviewId}`);
+            const dlb = document.getElementById(`rev-dislike-btn-${reviewId}`);
+            if (lb)  lb.className  = `react-btn react-sm ${data.my_vote === 1  ? "like-active"    : ""}`;
+            if (dlb) dlb.className = `react-btn react-sm ${data.my_vote === -1 ? "dislike-active" : ""}`;
+        }
+
         async function loadReviews() {
-            const res = await fetch(`${API}/reviews`);
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${API}/reviews`, { headers });
             const reviews = await res.json();
 
             document.getElementById("feed-count").textContent =
@@ -501,38 +571,52 @@
                     ? `${API}/${r.user_picture}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 return `
-                    <div class="${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6">
-                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
-                             src="${avatarUrl}" alt="${escapeHtml(r.username)}">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-2">
+                    <div class="rmp-anim flex gap-3" style="animation-delay:${i * 0.07}s">
+                        <!-- Avatar + thread line -->
+                        <div class="flex flex-col items-center flex-shrink-0" style="width:44px">
+                            <img class="w-11 h-11 rounded-2xl object-cover border-2 border-gray-50"
+                                 src="${avatarUrl}" alt="${escapeHtml(r.username)}">
+                            <div class="w-0.5 bg-gray-100 flex-1 mt-2 rounded-full" style="min-height:24px"></div>
+                        </div>
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0 pb-5">
+                            <div class="flex justify-between items-start mb-1">
                                 <div>
-                                    <h4 class="font-bold text-gray-800">
-                                        ${escapeHtml(r.username)}
-                                        <span class="text-gray-300 font-normal mx-2">on</span>
-                                        <a href="professor-profile.html?id=${r.professor_id}"
-                                           class="text-indigo-600 hover:underline">${escapeHtml(r.professor_name)}</a>
-                                    </h4>
-                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                    <span class="font-bold text-gray-800 text-sm">${escapeHtml(r.username)}</span>
+                                    <span class="text-gray-300 font-normal mx-1 text-xs">on</span>
+                                    <a href="professor-profile.html?id=${r.professor_id}"
+                                       class="text-indigo-600 hover:underline text-sm font-semibold">${escapeHtml(r.professor_name)}</a>
+                                    <p class="text-xs text-gray-400 font-medium mt-0.5">${date}</p>
                                 </div>
                                 <div class="flex text-sm flex-shrink-0">${renderStars(r.rating)}</div>
                             </div>
                             <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
 
-                            <!-- Replies toggle -->
-                            <button onclick="toggleReplies(${r.id})"
-                                class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition font-medium">
-                                <i class="far fa-comment-dots"></i>
-                                <span id="rep-count-${r.id}">Replies</span>
-                                <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
-                            </button>
+                            <!-- Single action row -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button id="rev-like-btn-${r.id}" onclick="reactToReview(${r.id}, 1)"
+                                    class="react-btn react-sm ${r.my_vote === 1 ? 'like-active' : ''}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span id="rev-like-count-${r.id}">${r.likes || 0}</span>
+                                </button>
+                                <button id="rev-dislike-btn-${r.id}" onclick="reactToReview(${r.id}, -1)"
+                                    class="react-btn react-sm ${r.my_vote === -1 ? 'dislike-active' : ''}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span id="rev-dislike-count-${r.id}">${r.dislikes || 0}</span>
+                                </button>
+                                <button onclick="toggleReplies(${r.id})"
+                                    class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition font-semibold ml-1">
+                                    <i class="far fa-comment-dots text-[10px]"></i>
+                                    <span id="rep-count-${r.id}">Replies</span>
+                                    <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
+                                </button>
+                            </div>
 
                             <!-- Replies section -->
-                            <div id="replies-${r.id}" class="hidden mt-3 space-y-2 pl-3 border-l-2 border-indigo-50">
-                                <div id="rep-list-${r.id}" class="space-y-2">
+                            <div id="replies-${r.id}" class="hidden mt-3">
+                                <div id="rep-list-${r.id}">
                                     <p class="text-xs text-gray-400">Loading...</p>
                                 </div>
-                                <!-- Reply form (shown when logged in) -->
                                 <div id="rep-form-${r.id}" class="gap-2 mt-2" style="display:none">
                                     <input id="rep-input-${r.id}" type="text"
                                         placeholder="Write a reply..."
@@ -582,5 +666,14 @@
             if (professors && reviews) loadDepartments(professors, reviews);
         });
     </script>
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-bottom-nav lg:hidden">
+        <a href="dashboard.html" class="mobile-nav-item mob-active"><i class="fas fa-th-large"></i><span>Home</span></a>
+        <a href="professors.html" class="mobile-nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Profs</span></a>
+        <a href="departments.html" class="mobile-nav-item"><i class="fas fa-building"></i><span>Depts</span></a>
+        <a href="my-reviews.html" class="mobile-nav-item"><i class="fas fa-star"></i><span>Reviews</span></a>
+        <a href="settings.html" class="mobile-nav-item"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+    </nav>
+    <script src="notifications.js"></script>
 </body>
 </html>

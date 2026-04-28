@@ -53,6 +53,43 @@ const db = mysql.createConnection({
 db.connect(err => {
   if (err) throw err;
   console.log("Database connected!");
+  db.query(`
+    CREATE TABLE IF NOT EXISTS review_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      review_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_review_user (review_id, username),
+      KEY idx_review_likes_review_id (review_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("review_likes table error:", err); });
+
+  db.query(`
+    CREATE TABLE IF NOT EXISTS reply_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      reply_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_reply_user (reply_id, username),
+      KEY idx_reply_likes_reply_id (reply_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("reply_likes table error:", err); });
+
+  db.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      username VARCHAR(100) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      message TEXT NOT NULL,
+      link VARCHAR(255) DEFAULT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_notifications_username (username)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("notifications table error:", err); });
 });
 
 // =========================
@@ -120,6 +157,15 @@ app.post("/login", async (req, res) => {
 // =========================
 // AUTH MIDDLEWARE
 // =========================
+function optionalAuth(req, res, next) {
+  const token = (req.headers["authorization"] || "").split(" ")[1];
+  if (!token) { req.user = null; return next(); }
+  jwt.verify(token, SECRET, (err, user) => {
+    req.user = err ? null : user;
+    next();
+  });
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -168,9 +214,25 @@ app.post("/professors", authenticateToken, (req, res) => {
   db.query("INSERT INTO professors (name, department_id) VALUES (?, ?)", [name, department_id], (err, result) => {
     if (err) return res.status(500).json({ message: "Error adding professor" });
 
+    const profId = result.insertId;
+
+    // Notify all users about the new lecturer
+    db.query("SELECT username FROM users", (err2, users) => {
+      if (!err2 && users.length > 0) {
+        const link = `/professor-profile.html?id=${profId}`;
+        const message = `New lecturer added: ${name}`;
+        users.forEach(u => {
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'professor_added', ?, ?)",
+            [u.username, message, link]
+          );
+        });
+      }
+    });
+
     res.json({
       message: "Professor added",
-      professor: { id: result.insertId, name, department_id }
+      professor: { id: profId, name, department_id }
     });
   });
 });
@@ -180,20 +242,30 @@ app.post("/professors", authenticateToken, (req, res) => {
 // ?professor_id=X  → reviews for one professor
 // (no param)       → global feed (all reviews, newest first, with professor name)
 // =========================
-app.get("/reviews", (req, res) => {
+app.get("/reviews", optionalAuth, (req, res) => {
   const { professor_id } = req.query;
+  const viewer = req.user ? req.user.username : null;
+
+  const likesCols = `
+    COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+    COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+    MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote`;
 
   if (professor_id) {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
        WHERE r.professor_id = ?
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC`,
-      [professor_id],
+      [viewer, professor_id],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -201,14 +273,19 @@ app.get("/reviews", (req, res) => {
     );
   } else {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC
        LIMIT 50`,
+      [viewer],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -249,11 +326,17 @@ app.post("/reviews", authenticateToken, (req, res) => {
 // =========================
 app.get("/reviews/mine", authenticateToken, (req, res) => {
   db.query(
-    `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+    `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+            p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes
      FROM reviews r
      JOIN professors p ON r.professor_id = p.id
      LEFT JOIN departments d ON p.department_id = d.id
+     LEFT JOIN review_likes rl ON r.id = rl.review_id
      WHERE r.username = ?
+     GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name, d.name
      ORDER BY r.created_at DESC`,
     [req.user.username],
     (err, results) => {
@@ -307,17 +390,25 @@ app.delete("/reviews/:id", authenticateToken, (req, res) => {
 // =========================
 // GET REPLIES (by review)
 // =========================
-app.get("/replies", (req, res) => {
+app.get("/replies", optionalAuth, (req, res) => {
   const { review_id } = req.query;
   if (!review_id) return res.status(400).json({ message: "review_id is required" });
 
+  const viewer = req.user ? req.user.username : null;
+
   db.query(
-    `SELECT rp.*, u.profile_picture AS user_picture
+    `SELECT rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at,
+            u.profile_picture AS user_picture,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+            MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote
      FROM replies rp
      LEFT JOIN users u ON rp.username = u.username
+     LEFT JOIN reply_likes rl ON rp.id = rl.reply_id
      WHERE rp.review_id = ?
+     GROUP BY rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at, u.profile_picture
      ORDER BY rp.created_at ASC`,
-    [review_id],
+    [viewer, review_id],
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json(results);
@@ -340,6 +431,22 @@ app.post("/replies", authenticateToken, (req, res) => {
     [review_id, req.user.username, reply_text],
     (err, result) => {
       if (err) return res.status(500).json({ message: "Error saving reply" });
+
+      // Notify the review author (if different from replier)
+      db.query(
+        "SELECT r.username, r.professor_id FROM reviews r WHERE r.id = ?",
+        [review_id],
+        (err2, rows) => {
+          if (!err2 && rows.length > 0 && rows[0].username !== req.user.username) {
+            const link = `/professor-profile.html?id=${rows[0].professor_id}&review=${review_id}`;
+            db.query(
+              "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
+              [rows[0].username, `${req.user.username} replied to your review`, link]
+            );
+          }
+        }
+      );
+
       res.json({
         message: "Reply posted",
         reply: { id: result.insertId, review_id, username: req.user.username, reply_text }
@@ -424,6 +531,141 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
     (err) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json({ message: "Professor picture updated", profile_picture: picturePath });
+    }
+  );
+});
+
+// =========================
+// REACT TO REVIEW — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/reviews/:id/react", authenticateToken, (req, res) => {
+  const reviewId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM review_likes WHERE review_id = ?`,
+      [req.user.username, reviewId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
+    [reviewId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          db.query("DELETE FROM review_likes WHERE review_id = ? AND username = ?",
+            [reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+        } else {
+          db.query("UPDATE review_likes SET value = ? WHERE review_id = ? AND username = ?",
+            [value, reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+        }
+      } else {
+        db.query("INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)",
+          [reviewId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+      }
+    }
+  );
+});
+
+// =========================
+// REACT TO REPLY — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/replies/:id/react", authenticateToken, (req, res) => {
+  const replyId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM reply_likes WHERE reply_id = ?`,
+      [req.user.username, replyId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
+    [replyId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          db.query(
+            "DELETE FROM reply_likes WHERE reply_id = ? AND username = ?",
+            [replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          );
+        } else {
+          db.query(
+            "UPDATE reply_likes SET value = ? WHERE reply_id = ? AND username = ?",
+            [value, replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          );
+        }
+      } else {
+        db.query(
+          "INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)",
+          [replyId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+        );
+      }
+    }
+  );
+});
+
+// =========================
+// GET NOTIFICATIONS (Protected)
+// =========================
+app.get("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT * FROM notifications WHERE username = ? ORDER BY created_at DESC LIMIT 50",
+    [req.user.username],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// MARK NOTIFICATIONS READ (Protected)
+// =========================
+app.put("/notifications/mark-read", authenticateToken, (req, res) => {
+  db.query(
+    "UPDATE notifications SET is_read = 1 WHERE username = ? AND is_read = 0",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications marked as read" });
     }
   );
 });
