@@ -69,7 +69,13 @@
     <main class="flex-1 flex flex-col">
         <!-- Header -->
         <header class="h-16 flex items-center justify-between px-4 sm:px-8 glass-header">
-            <div class="flex items-center gap-3 text-gray-500">
+            <!-- Mobile logo -->
+            <div class="flex items-center gap-2 sm:hidden">
+                <div class="rmp-logo-icon" style="width:34px;height:34px;font-size:14px"><i class="fas fa-university"></i></div>
+                <span class="text-base font-bold text-gray-800">RateMyProf</span>
+            </div>
+            <!-- Desktop breadcrumb -->
+            <div class="hidden sm:flex items-center gap-3 text-gray-500">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <span class="text-sm font-semibold text-gray-800">Settings</span>
@@ -132,12 +138,19 @@
                     <!-- Account Info -->
                     <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.12s">
                         <h2 class="text-base font-bold text-gray-800 mb-1">Account Info</h2>
-                        <p class="text-xs text-gray-400 mb-6">Your username is how you appear on reviews.</p>
+                        <p class="text-xs text-gray-400 mb-6">Choose a unique username that appears on your reviews.</p>
                         <div class="flex flex-col gap-1">
                             <label class="text-sm font-semibold text-gray-700">Username</label>
-                            <input id="settings-username" type="text" readonly
-                                   class="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-sm cursor-not-allowed focus:outline-none">
-                            <p class="text-xs text-gray-400 mt-1">Username cannot be changed.</p>
+                            <input id="settings-username" type="text"
+                                   class="px-4 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                   placeholder="Your username">
+                            <div class="flex items-center gap-4 mt-3">
+                                <button onclick="updateUsername()"
+                                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                                    Update Username
+                                </button>
+                                <p id="username-msg" class="text-sm font-medium min-h-[20px]"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -247,6 +260,36 @@
                     document.getElementById("settings-avatar").src = src;
                 }
             } catch {}
+        }
+
+        async function updateUsername() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const newUsername = document.getElementById("settings-username").value.trim();
+            const msg = document.getElementById("username-msg");
+            msg.textContent = "";
+
+            const res = await fetch(`${API}/users/username`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ new_username: newUsername })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                // Store new token and update all UI username references
+                localStorage.setItem("token", data.token);
+                document.getElementById("header-username").textContent  = data.username;
+                document.getElementById("sidebar-username").textContent = data.username;
+                document.getElementById("nav-username").textContent     = data.username;
+                document.getElementById("settings-username").value      = data.username;
+                msg.textContent  = "Username updated!";
+                msg.className    = "text-sm font-medium text-green-600";
+            } else {
+                msg.textContent = data.message || "Update failed.";
+                msg.className   = "text-sm font-medium text-red-500";
+            }
+            setTimeout(() => { msg.textContent = ""; }, 4000);
         }
 
         async function uploadPicture(input) {

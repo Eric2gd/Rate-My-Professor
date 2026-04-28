@@ -249,8 +249,7 @@
             document.getElementById("header-avatar").src =
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             const action = document.getElementById("header-action");
-            action.textContent = "View Profile";
-            action.removeAttribute("href");
+            action.style.display = 'none';
 
             // Sidebar
             document.getElementById("sidebar-username").textContent = username;
@@ -427,6 +426,66 @@
             }
         }
 
+        function getMe() {
+            try { const t = localStorage.getItem("token"); return t ? JSON.parse(atob(t.split(".")[1])).username : null; } catch { return null; }
+        }
+
+        function editReply(replyId) {
+            const textEl = document.getElementById(`reply-text-${replyId}`);
+            if (!textEl || document.getElementById(`reply-edit-form-${replyId}`)) return;
+            const original = textEl.textContent;
+            textEl.style.display = 'none';
+            ['reply-edit-btn-' + replyId, 'reply-del-btn-' + replyId].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+            const form = document.createElement('div');
+            form.id = `reply-edit-form-${replyId}`;
+            form.innerHTML = `
+                <input id="reply-edit-input-${replyId}" type="text"
+                    class="w-full px-3 py-1.5 border border-indigo-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white mt-0.5"
+                    value="${escapeHtml(original)}">
+                <div class="flex gap-2 mt-1.5">
+                    <button onclick="saveReplyEdit(${replyId})" class="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg font-semibold hover:bg-indigo-700 transition">Save</button>
+                    <button onclick="cancelReplyEdit(${replyId})" class="px-3 py-1 border border-gray-200 text-gray-500 text-xs rounded-lg font-semibold hover:bg-gray-50 transition">Cancel</button>
+                </div>`;
+            textEl.after(form);
+            document.getElementById(`reply-edit-input-${replyId}`).focus();
+        }
+
+        function cancelReplyEdit(replyId) {
+            document.getElementById(`reply-text-${replyId}`).style.display = '';
+            const form = document.getElementById(`reply-edit-form-${replyId}`); if (form) form.remove();
+            ['reply-edit-btn-' + replyId, 'reply-del-btn-' + replyId].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
+        }
+
+        async function saveReplyEdit(replyId) {
+            const input = document.getElementById(`reply-edit-input-${replyId}`);
+            const newText = input.value.trim(); if (!newText) return;
+            const res = await fetch(`${API}/replies/${replyId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+                body: JSON.stringify({ reply_text: newText })
+            });
+            if (res.ok) { document.getElementById(`reply-text-${replyId}`).textContent = newText; cancelReplyEdit(replyId); }
+        }
+
+        async function deleteReplyDash(replyId) {
+            if (!confirm("Delete this reply?")) return;
+            const res = await fetch(`${API}/replies/${replyId}`, {
+                method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            });
+            if (res.ok) { const item = document.getElementById(`reply-item-${replyId}`); if (item) item.remove(); }
+        }
+
+        async function openDashboardReply(reviewId) {
+            const section = document.getElementById(`replies-${reviewId}`);
+            if (section.classList.contains('hidden')) {
+                await toggleReplies(reviewId);
+            }
+            const form = document.getElementById(`rep-form-${reviewId}`);
+            if (form) { form.style.display = 'flex'; }
+            const input = document.getElementById(`rep-input-${reviewId}`);
+            if (input) { input.focus(); }
+        }
+
         async function reactToReply(replyId, value) {
             const token = localStorage.getItem("token");
             if (!token) return;
@@ -463,6 +522,7 @@
             if (replies.length === 0) {
                 list.innerHTML = `<p class="text-xs text-gray-400 italic">No replies yet — be the first!</p>`;
             } else {
+                const me = getMe();
                 list.innerHTML = replies.map(rep => {
                     const d = new Date(rep.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
                     const av = rep.user_picture
@@ -470,16 +530,25 @@
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.username)}&background=e0e7ff&color=4338ca&size=32`;
                     const lc = rep.my_vote === 1  ? "like-active"    : "";
                     const dc = rep.my_vote === -1 ? "dislike-active" : "";
+                    const isOwner = me === rep.username;
                     return `
-                        <div class="flex gap-2">
+                        <div id="reply-item-${rep.id}" class="flex gap-2">
                             <div class="flex flex-col items-center flex-shrink-0" style="width:28px">
                                 <img class="w-7 h-7 rounded-full object-cover border-2 border-white" src="${av}" alt="">
                                 <div class="w-0.5 bg-gray-100 flex-1 mt-1 rounded-full" style="min-height:10px"></div>
                             </div>
                             <div class="flex-1 pb-2">
-                                <span class="text-xs font-bold text-gray-700">${escapeHtml(rep.username)}</span>
-                                <span class="text-[10px] text-gray-400 ml-2">${d}</span>
-                                <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(rep.reply_text)}</p>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-700">${escapeHtml(rep.username)}</span>
+                                        <span class="text-[10px] text-gray-400 ml-2">${d}</span>
+                                    </div>
+                                    ${isOwner ? `<div class="flex gap-2">
+                                        <button id="reply-edit-btn-${rep.id}" onclick="editReply(${rep.id})" class="text-xs text-gray-400 hover:text-indigo-500 transition"><i class="fas fa-pen" style="font-size:9px"></i></button>
+                                        <button id="reply-del-btn-${rep.id}" onclick="deleteReplyDash(${rep.id})" class="text-xs text-gray-400 hover:text-red-500 transition"><i class="fas fa-trash" style="font-size:9px"></i></button>
+                                    </div>` : ''}
+                                </div>
+                                <p id="reply-text-${rep.id}" class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(rep.reply_text)}</p>
                                 <div class="flex items-center gap-1.5 mt-1.5">
                                     <button id="like-btn-${rep.id}" onclick="reactToReply(${rep.id}, 1)"
                                         class="react-btn react-sm ${lc}">
@@ -610,6 +679,10 @@
                                     <span id="rep-count-${r.id}">Replies</span>
                                     <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
                                 </button>
+                                <button onclick="openDashboardReply(${r.id})"
+                                    class="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-500 transition font-semibold">
+                                    <i class="fas fa-reply text-[10px]"></i> Reply
+                                </button>
                             </div>
 
                             <!-- Replies section -->
@@ -655,6 +728,8 @@
         // ── Search filter ─────────────────────────────────────────────────
         document.getElementById("search-input").addEventListener("input", function () {
             const q = this.value.toLowerCase();
+            // Switch to the Professors list tab so results are visible
+            if (q) switchTab('profs');
             document.querySelectorAll("#professors-list a").forEach(el => {
                 el.style.display = el.textContent.toLowerCase().includes(q) ? "" : "none";
             });
