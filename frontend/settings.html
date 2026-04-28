@@ -12,58 +12,63 @@
 <body class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 hidden lg:flex flex-col glass-sidebar">
-        <div class="p-6 flex items-center gap-2">
-            <div class="bg-indigo-600 p-1.5 rounded-lg">
-                <i class="fas fa-university text-white text-xl"></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+    <aside id="sidebar" class="rmp-sidebar hidden lg:flex">
+        <div class="rmp-logo">
+            <div class="rmp-logo-icon"><i class="fas fa-university"></i></div>
+            <span class="rmp-label text-base font-bold text-gray-800" style="flex:1">RateMyProf</span>
+            <button id="pin-btn" class="rmp-pin-btn" onclick="togglePin()" title="Pin sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 mt-4">
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
-            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+        <nav class="rmp-nav">
+            <span class="rmp-section-title">MENU</span>
+            <a href="dashboard.html" class="rmp-nav-item">
+                <i class="fas fa-th-large"></i><span class="rmp-label">Home</span>
             </a>
-            <a href="professors.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3">Professors</span>
+            <a href="professors.html" class="rmp-nav-item">
+                <i class="fas fa-chalkboard-teacher"></i><span class="rmp-label">Professors</span>
             </a>
-            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            <a href="departments.html" class="rmp-nav-item">
+                <i class="fas fa-building"></i><span class="rmp-label">Departments</span>
             </a>
-            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            <a href="my-reviews.html" class="rmp-nav-item">
+                <i class="fas fa-star"></i><span class="rmp-label">My Reviews</span>
             </a>
 
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <span class="rmp-section-title">ACCOUNT</span>
             <div id="nav-guest">
-                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                <a href="login.html" class="rmp-nav-item">
+                    <i class="fas fa-sign-in-alt"></i><span class="rmp-label">Sign In</span>
                 </a>
-                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                <a href="register.html" class="rmp-nav-item">
+                    <i class="fas fa-user-plus"></i><span class="rmp-label">Register</span>
                 </a>
             </div>
             <div id="nav-loggedin" class="hidden">
-                <a href="settings.html" class="flex items-center px-6 py-3 sidebar-active">
-                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate font-medium">Profile</span>
+                <a href="settings.html" class="rmp-nav-item rmp-active">
+                    <i class="fas fa-user-circle"></i><span id="nav-username" class="rmp-label truncate">Profile</span>
                 </a>
-                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
-                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                <button onclick="logout()" class="rmp-nav-item" style="color:#ef4444" onmouseover="this.style.background='rgba(254,242,242,0.8)'" onmouseout="this.style.background=''">
+                    <i class="fas fa-sign-out-alt"></i><span class="rmp-label">Log Out</span>
                 </button>
             </div>
         </nav>
 
-        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
-            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        <div class="rmp-footer">
+            <img id="sidebar-avatar" class="rmp-footer-avatar"
+                 src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="">
+            <div class="rmp-label" style="min-width:0">
+                <p id="sidebar-username" class="text-xs font-semibold text-gray-700 truncate" style="max-width:140px">Not logged in</p>
+                <a href="settings.html" class="text-[10px] text-indigo-400 hover:underline">View Profile</a>
+            </div>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col">
         <!-- Header -->
-        <header class="h-16 flex items-center justify-between px-8 glass-header">
+        <header class="h-16 flex items-center justify-between px-4 sm:px-8 glass-header">
             <div class="flex items-center gap-3 text-gray-500">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
@@ -94,85 +99,96 @@
         </header>
 
         <!-- Page Content -->
-        <div class="p-8 max-w-2xl w-full">
-            <div class="mb-8">
+        <div class="p-4 sm:p-8 w-full max-w-5xl">
+            <div class="mb-6 sm:mb-8">
                 <h1 class="text-2xl font-extrabold text-gray-800">Account Settings</h1>
                 <p class="text-sm text-gray-400 mt-1">Manage your profile and account preferences.</p>
             </div>
 
-            <!-- Profile Picture -->
-            <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6" style="animation-delay:0.05s">
-                <h2 class="text-base font-bold text-gray-800 mb-1">Profile Picture</h2>
-                <p class="text-xs text-gray-400 mb-6">This appears next to your reviews and ratings.</p>
-                <div class="flex items-center gap-6">
-                    <div class="relative">
-                        <img id="settings-avatar" class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100"
-                             src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Your avatar">
+            <!-- 2-column grid on desktop, single column on mobile -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Left column: Profile + Account Info -->
+                <div class="space-y-6">
+
+                    <!-- Profile Picture -->
+                    <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.05s">
+                        <h2 class="text-base font-bold text-gray-800 mb-1">Profile Picture</h2>
+                        <p class="text-xs text-gray-400 mb-6">This appears next to your reviews and ratings.</p>
+                        <div class="flex items-center gap-6">
+                            <img id="settings-avatar" class="w-20 h-20 rounded-full object-cover border-4 border-indigo-100"
+                                 src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Your avatar">
+                            <div class="space-y-2">
+                                <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                                    <i class="fas fa-upload text-xs"></i> Upload new picture
+                                    <input id="pic-input" type="file" accept="image/*" class="hidden" onchange="uploadPicture(this)">
+                                </label>
+                                <p id="pic-msg" class="text-xs min-h-[16px]"></p>
+                                <p class="text-xs text-gray-400">JPG, PNG or GIF · Max 2 MB</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="space-y-2">
-                        <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
-                            <i class="fas fa-upload text-xs"></i> Upload new picture
-                            <input id="pic-input" type="file" accept="image/*" class="hidden" onchange="uploadPicture(this)">
-                        </label>
-                        <p id="pic-msg" class="text-xs min-h-[16px]"></p>
-                        <p class="text-xs text-gray-400">JPG, PNG or GIF · Max 2 MB</p>
+
+                    <!-- Account Info -->
+                    <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.12s">
+                        <h2 class="text-base font-bold text-gray-800 mb-1">Account Info</h2>
+                        <p class="text-xs text-gray-400 mb-6">Your username is how you appear on reviews.</p>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-sm font-semibold text-gray-700">Username</label>
+                            <input id="settings-username" type="text" readonly
+                                   class="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-sm cursor-not-allowed focus:outline-none">
+                            <p class="text-xs text-gray-400 mt-1">Username cannot be changed.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Account Info -->
-            <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6" style="animation-delay:0.12s">
-                <h2 class="text-base font-bold text-gray-800 mb-1">Account Info</h2>
-                <p class="text-xs text-gray-400 mb-6">Your username is how you appear on reviews.</p>
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-semibold text-gray-700">Username</label>
-                    <input id="settings-username" type="text" readonly
-                           class="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-sm cursor-not-allowed focus:outline-none">
-                    <p class="text-xs text-gray-400 mt-1">Username cannot be changed.</p>
-                </div>
-            </div>
+                <!-- Right column: Change Password + Danger Zone -->
+                <div class="space-y-6">
 
-            <!-- Change Password -->
-            <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 mb-6" style="animation-delay:0.19s">
-                <h2 class="text-base font-bold text-gray-800 mb-1">Change Password</h2>
-                <p class="text-xs text-gray-400 mb-6">Use a strong password you don't use elsewhere.</p>
-                <div class="space-y-4">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-semibold text-gray-700">Current Password</label>
-                        <input id="current-password" type="password" placeholder="Enter current password"
-                               class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <!-- Change Password -->
+                    <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.19s">
+                        <h2 class="text-base font-bold text-gray-800 mb-1">Change Password</h2>
+                        <p class="text-xs text-gray-400 mb-6">Use a strong password you don't use elsewhere.</p>
+                        <div class="space-y-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-semibold text-gray-700">Current Password</label>
+                                <input id="current-password" type="password" placeholder="Enter current password"
+                                       class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-semibold text-gray-700">New Password</label>
+                                <input id="new-password" type="password" placeholder="Enter new password"
+                                       class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button onclick="changePassword()"
+                                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                                    Update Password
+                                </button>
+                                <p id="pw-msg" class="text-sm font-medium min-h-[20px]"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-semibold text-gray-700">New Password</label>
-                        <input id="new-password" type="password" placeholder="Enter new password"
-                               class="px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <button onclick="changePassword()"
-                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
-                            Update Password
-                        </button>
-                        <p id="pw-msg" class="text-sm font-medium min-h-[20px]"></p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Danger Zone -->
-            <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-red-50 mb-6" style="animation-delay:0.26s">
-                <h2 class="text-base font-bold text-gray-800 mb-1">Danger Zone</h2>
-                <p class="text-xs text-gray-400 mb-6">These actions are permanent and cannot be undone.</p>
-                <div class="flex items-center gap-4">
-                    <button onclick="logout()"
-                            class="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
-                        <i class="fas fa-sign-out-alt text-xs"></i> Log Out
-                    </button>
-                    <button onclick="confirmDelete()"
-                            class="flex items-center gap-2 px-5 py-2.5 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold rounded-xl transition">
-                        <i class="fas fa-trash text-xs"></i> Delete Account
-                    </button>
+                    <!-- Danger Zone -->
+                    <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-red-50" style="animation-delay:0.26s">
+                        <h2 class="text-base font-bold text-gray-800 mb-1">Danger Zone</h2>
+                        <p class="text-xs text-gray-400 mb-6">These actions are permanent and cannot be undone.</p>
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <button onclick="logout()"
+                                    class="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold rounded-xl transition">
+                                <i class="fas fa-sign-out-alt text-xs"></i> Log Out
+                            </button>
+                            <button onclick="confirmDelete()"
+                                    class="flex items-center gap-2 px-5 py-2.5 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold rounded-xl transition">
+                                <i class="fas fa-trash text-xs"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="mobile-nav-spacer lg:hidden flex-shrink-0"></div>
     </main>
 
     <script>
@@ -181,6 +197,16 @@
         function getUsernameFromToken(token) {
             try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
             catch { return "User"; }
+        }
+
+        // ── Sidebar pin ───────────────────────────────────────────────────────
+        const sidebar = document.getElementById('sidebar');
+        if (localStorage.getItem('sidebarPinned') === 'true') sidebar.classList.add('pinned');
+        function togglePin() {
+            sidebar.classList.toggle('pinned');
+            localStorage.setItem('sidebarPinned', sidebar.classList.contains('pinned'));
+            document.getElementById('pin-btn').querySelector('i').className =
+                sidebar.classList.contains('pinned') ? 'fas fa-times' : 'fas fa-thumbtack';
         }
 
         function logout() {
@@ -197,7 +223,10 @@
             }
             const username = getUsernameFromToken(token);
 
+            const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             document.getElementById("header-username").textContent = username;
+            document.getElementById("header-avatar").src  = avatarFallback;
+            document.getElementById("sidebar-avatar").src = avatarFallback;
             document.getElementById("sidebar-username").textContent = username;
             document.getElementById("nav-username").textContent = username;
             document.getElementById("settings-username").value = username;
@@ -212,8 +241,9 @@
                     const user = await res.json();
                     const src = user.profile_picture
                         ? `${API}/${user.profile_picture}`
-                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
-                    document.getElementById("header-avatar").src = src;
+                        : avatarFallback;
+                    document.getElementById("header-avatar").src   = src;
+                    document.getElementById("sidebar-avatar").src  = src;
                     document.getElementById("settings-avatar").src = src;
                 }
             } catch {}
@@ -298,6 +328,14 @@
 
         initUser();
     </script>
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-bottom-nav lg:hidden">
+        <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>Home</span></a>
+        <a href="professors.html" class="mobile-nav-item"><i class="fas fa-chalkboard-teacher"></i><span>Profs</span></a>
+        <a href="departments.html" class="mobile-nav-item"><i class="fas fa-building"></i><span>Depts</span></a>
+        <a href="my-reviews.html" class="mobile-nav-item"><i class="fas fa-star"></i><span>Reviews</span></a>
+        <a href="settings.html" class="mobile-nav-item mob-active"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+    </nav>
     <script src="notifications.js"></script>
 </body>
 </html>

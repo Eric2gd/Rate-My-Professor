@@ -546,6 +546,124 @@ body {
     border-radius: 16px;
 }
 
+/* ══════════════════════════════════════════
+   MOBILE BOTTOM NAVIGATION
+   ══════════════════════════════════════════ */
+
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 300;
+    padding: 6px 4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(99,102,241,0.1);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 12px;
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border-radius: 14px;
+    transition: color 0.15s, background 0.15s;
+    min-width: 52px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item i { font-size: 20px; display: block; }
+
+.mobile-nav-item.mob-active {
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.09);
+}
+
+/* Mobile spacer keeps content above the floating bottom nav */
+.mobile-nav-spacer { height: 92px; }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE MOBILE ADJUSTMENTS
+   ══════════════════════════════════════════ */
+
+/* ── Sticky header (all pages) ── */
+header.glass-header {
+    position: sticky;
+    top: 0;
+    z-index: 150;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Sticky filter/search bar (professors & departments) ── */
+.sticky-filter {
+    position: sticky;
+    top: 64px;
+    z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+}
+
+/* ── Compact professor cards on mobile (2-col grid) ── */
+@media (max-width: 639px) {
+    #professors-grid { gap: 10px; }
+    #professors-grid a { padding: 12px 10px; border-radius: 18px; }
+    #professors-grid img.prof-avatar-img { width: 40px; height: 40px; }
+    #professors-grid h3 { font-size: 11px; }
+    #professors-grid .prof-bio-snippet { display: none; }
+}
+
+/* Notification: bottom sheet above bottom nav on mobile */
+@media (max-width: 1023px) {
+    .notif-dropdown {
+        position: fixed;
+        bottom: 102px;
+        left: 12px;
+        right: 12px;
+        top: auto;
+        width: auto;
+        max-height: 65vh;
+        border-radius: 24px;
+    }
+
+    /* Glass user chip: hide text, keep avatar */
+    .glass-user-chip .text-left { display: none; }
+    .glass-user-chip { padding: 5px; border-radius: 12px; }
+
+    /* Tighten the sidebar footer when sidebar is hidden anyway */
+    .rmp-sidebar { display: none !important; }
+
+    /* Breadcrumb: scrollable but no visible scrollbar */
+    .scrollbar-none { scrollbar-width: none; }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+
+    /* Filter bar on professors page: stack on mobile */
+    .bg-white.rounded-2xl.flex.flex-wrap { gap: 0.75rem; }
+
+    /* Department header: shrink padding on mobile */
+    .dept-header { padding: 1.25rem 1rem !important; }
+
+    /* React buttons: full touch target on mobile */
+    .react-btn { min-height: 36px; }
+}
+
 /* ── Department accordion in dashboard ── */
 .dept-accordion-body {
     max-height: 0;
