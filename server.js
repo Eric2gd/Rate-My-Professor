@@ -30,8 +30,9 @@ const replyRoutes = require("./routes/replyRoutes");
 
 const corsOpts = {
   origin: [
-    "http://localhost:8000"
-  ],
+    "http://localhost:8000",
+    process.env.FRONTEND_URL  // set this in Vercel env vars to your Surge URL
+  ].filter(Boolean),
   optionsSuccessStatus: 200
 }
 
@@ -39,7 +40,7 @@ const app = express();
 app.use(express.json());
 app.use(cors(corsOpts));
 
-const SECRET = "mysecretkey";
+const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
 // Dependency Injection
 const userRepo = new UserRepository(db);
