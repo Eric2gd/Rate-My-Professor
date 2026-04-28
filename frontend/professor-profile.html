@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="theme.js"></script>
 </head>
 <body class="flex min-h-screen">
 
@@ -69,7 +70,13 @@
     <main class="flex-1 flex flex-col">
         <!-- Top Navigation -->
         <header class="h-16 flex items-center justify-between px-4 sm:px-8 glass-header">
-            <div class="flex items-center gap-1.5 text-gray-500 overflow-x-auto max-w-[55vw] sm:max-w-none scrollbar-none">
+            <!-- Mobile logo -->
+            <div class="flex items-center gap-2 sm:hidden">
+                <div class="rmp-logo-icon" style="width:34px;height:34px;font-size:14px"><i class="fas fa-university"></i></div>
+                <span class="text-base font-bold text-gray-800">RateMyProf</span>
+            </div>
+            <!-- Desktop breadcrumb -->
+            <div class="hidden sm:flex items-center gap-1.5 text-gray-500 overflow-x-auto scrollbar-none">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <a href="departments.html" class="hover:text-indigo-600 text-sm font-medium">Departments</a>
@@ -97,7 +104,6 @@
                 <div class="flex items-center gap-3 border-l pl-4">
                     <div class="text-right">
                         <p id="header-username" class="text-sm font-bold text-gray-800">Guest</p>
-                        <p class="text-xs text-gray-400">View Profile</p>
                     </div>
                     <img id="header-avatar" class="h-10 w-10 rounded-full object-cover border-2 border-indigo-100" src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="User">
                 </div>
@@ -137,8 +143,8 @@
 
                 <!-- Review Submission Form -->
                 <div id="review-form-card" class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.08s">
-                    <h3 class="text-gray-800 font-bold text-lg mb-1">Leave a Review</h3>
-                    <p class="text-sm text-gray-400 mb-6">Share your experience with this professor.</p>
+                    <h3 id="form-title" class="text-gray-800 font-bold text-lg mb-1">Leave a Review</h3>
+                    <p id="form-subtitle" class="text-sm text-gray-400 mb-6">Share your experience with this professor.</p>
 
                     <!-- Star Picker -->
                     <div class="flex items-center gap-2 mb-5">
@@ -156,11 +162,18 @@
                     <!-- Review Text -->
                     <textarea id="review-text" rows="4" placeholder="Write your review here..." class="w-full border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-4"></textarea>
 
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-4 flex-wrap">
                         <p id="form-message" class="text-sm font-medium"></p>
-                        <button onclick="submitReview()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-semibold transition">
-                            Submit Review
-                        </button>
+                        <div class="flex items-center gap-3 ml-auto">
+                            <button id="form-cancel-btn" onclick="cancelReviewEdit()"
+                                class="hidden px-6 py-3 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-2xl text-sm font-semibold transition">
+                                Cancel
+                            </button>
+                            <button id="form-submit-btn" onclick="submitReview()"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-semibold transition">
+                                Submit Review
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -187,10 +200,11 @@
 
     <script>
         const API = "http://localhost:3000";
-        let selectedRating = 0;
-        let professorId = null;
-        let allReviews  = [];
-        let sortMode    = 'recent';
+        let selectedRating  = 0;
+        let professorId     = null;
+        let allReviews      = [];
+        let sortMode        = 'recent';
+        let editingReviewId = null;
 
         // ── Sidebar pin ───────────────────────────────────────────────────────
         const sidebar = document.getElementById('sidebar');
@@ -376,6 +390,7 @@
 
             const sorted = getSorted(reviews);
 
+            const me = getMe();
             list.innerHTML = sorted.map(r => {
                 const date = new Date(r.created_at).toLocaleDateString("en-GB", {
                     day: "numeric", month: "short", year: "numeric"
@@ -385,6 +400,7 @@
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 const likeClass    = r.my_vote === 1  ? "like-active"    : "";
                 const dislikeClass = r.my_vote === -1 ? "dislike-active" : "";
+                const isOwner = me === r.username;
                 return `
                     <div id="review-${r.id}" class="flex gap-3">
                         <!-- Avatar + thread line -->
@@ -400,7 +416,13 @@
                                     <span class="font-bold text-gray-800 text-sm">${escapeHtml(r.username)}</span>
                                     <span class="text-xs text-gray-400 ml-2">${date}</span>
                                 </div>
-                                <div class="flex text-sm">${renderStars(r.rating)}</div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex text-sm">${renderStars(r.rating)}</div>
+                                    ${isOwner ? `<button onclick="editReview(${r.id})"
+                                        class="text-gray-400 hover:text-indigo-600 transition ml-1" title="Edit your review">
+                                        <i class="fas fa-pen" style="font-size:11px"></i>
+                                    </button>` : ''}
+                                </div>
                             </div>
                             <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
 
@@ -477,10 +499,49 @@
             }).join("");
         }
 
-        // ── Submit review ───────────────────────────────────────────────────
+        // ── Edit review — loads data into the form card ─────────────────────
+        function editReview(reviewId) {
+            const review = allReviews.find(r => r.id === reviewId);
+            if (!review) return;
+            const reviewText = review.review_text;
+            const rating     = review.rating;
+
+            editingReviewId = reviewId;
+            selectedRating  = rating;
+
+            document.getElementById("review-text").value = reviewText;
+            document.querySelectorAll(".star-btn").forEach(s =>
+                s.classList.toggle("active", parseInt(s.dataset.value) <= rating)
+            );
+            document.getElementById("rating-label").textContent = ratingLabels[rating] || "";
+
+            document.getElementById("form-title").textContent    = "Edit Your Review";
+            document.getElementById("form-subtitle").textContent = "Update your rating and review text below.";
+            document.getElementById("form-submit-btn").textContent = "Update Review";
+            document.getElementById("form-cancel-btn").classList.remove("hidden");
+            document.getElementById("form-message").textContent = "";
+
+            document.getElementById("review-form-card").scrollIntoView({ behavior: "smooth", block: "start" });
+            setTimeout(() => document.getElementById("review-text").focus(), 400);
+        }
+
+        function cancelReviewEdit() {
+            editingReviewId = null;
+            selectedRating  = 0;
+            document.getElementById("review-text").value = "";
+            document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
+            document.getElementById("rating-label").textContent     = "Select a rating";
+            document.getElementById("form-title").textContent       = "Leave a Review";
+            document.getElementById("form-subtitle").textContent    = "Share your experience with this professor.";
+            document.getElementById("form-submit-btn").textContent  = "Submit Review";
+            document.getElementById("form-cancel-btn").classList.add("hidden");
+            document.getElementById("form-message").textContent = "";
+        }
+
+        // ── Submit (or update) review ───────────────────────────────────────
         async function submitReview() {
             const token = localStorage.getItem("token");
-            const msg = document.getElementById("form-message");
+            const msg   = document.getElementById("form-message");
 
             if (!token) {
                 msg.textContent = "You must be logged in to submit a review.";
@@ -499,28 +560,30 @@
                 return;
             }
 
-            const res = await fetch(`${API}/reviews`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    professor_id: professorId,
-                    review_text: reviewText,
-                    rating: selectedRating
-                })
-            });
+            const isEditing = !!editingReviewId;
+            const url    = isEditing ? `${API}/reviews/${editingReviewId}` : `${API}/reviews`;
+            const method = isEditing ? "PUT" : "POST";
+            const body   = isEditing
+                ? JSON.stringify({ review_text: reviewText, rating: selectedRating })
+                : JSON.stringify({ professor_id: professorId, review_text: reviewText, rating: selectedRating });
 
+            const res  = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body
+            });
             const data = await res.json();
 
             if (res.ok) {
-                msg.textContent = "Review submitted!";
-                msg.className = "text-sm font-medium text-green-600";
-                document.getElementById("review-text").value = "";
-                selectedRating = 0;
-                document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
-                document.getElementById("rating-label").textContent = "Select a rating";
+                msg.textContent = isEditing ? "Review updated!" : "Review submitted!";
+                msg.className   = "text-sm font-medium text-green-600";
+                if (isEditing) cancelReviewEdit();
+                else {
+                    document.getElementById("review-text").value = "";
+                    selectedRating = 0;
+                    document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
+                    document.getElementById("rating-label").textContent = "Select a rating";
+                }
                 loadReviews(professorId);
             } else {
                 msg.textContent = data.message || "Failed to submit review.";
@@ -528,8 +591,13 @@
             }
         }
 
-        // ── Shared reply renderer with like/dislike ──────────────────────────
+        function getMe() {
+            try { const t = localStorage.getItem("token"); return t ? JSON.parse(atob(t.split(".")[1])).username : null; } catch { return null; }
+        }
+
+        // ── Shared reply renderer with like/dislike + edit/delete ─────────────
         function renderRepliesHtml(replies) {
+            const me = getMe();
             return replies.map(rp => {
                 const avatarUrl = rp.user_picture
                     ? `${API}/${rp.user_picture}`
@@ -537,15 +605,22 @@
                 const date = new Date(rp.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
                 const likeClass    = rp.my_vote === 1  ? "like-active"    : "";
                 const dislikeClass = rp.my_vote === -1 ? "dislike-active" : "";
+                const isOwner = me === rp.username;
                 return `
-                    <div class="flex gap-2">
+                    <div id="reply-item-${rp.id}" class="flex gap-2">
                         <div class="flex flex-col items-center flex-shrink-0" style="width:32px">
                             <img class="w-8 h-8 rounded-xl object-cover" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
                             <div class="w-0.5 bg-gray-100 flex-1 mt-1.5 rounded-full" style="min-height:12px"></div>
                         </div>
                         <div class="flex-1 min-w-0 pb-3">
-                            <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
-                            <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
+                                ${isOwner ? `<div class="flex items-center gap-2 flex-shrink-0">
+                                    <button id="reply-edit-btn-${rp.id}" onclick="editReply(${rp.id})" class="text-xs text-gray-400 hover:text-indigo-500 transition"><i class="fas fa-pen" style="font-size:9px"></i></button>
+                                    <button id="reply-del-btn-${rp.id}"  onclick="deleteReply(${rp.id}, ${rp.review_id})" class="text-xs text-gray-400 hover:text-red-500 transition"><i class="fas fa-trash" style="font-size:9px"></i></button>
+                                </div>` : ''}
+                            </div>
+                            <p id="reply-text-${rp.id}" class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
                             <div class="flex items-center gap-1.5 mt-1.5">
                                 <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
                                     class="react-btn react-sm ${likeClass}">
@@ -561,6 +636,63 @@
                         </div>
                     </div>`;
             }).join("");
+        }
+
+        function editReply(replyId) {
+            const textEl = document.getElementById(`reply-text-${replyId}`);
+            if (!textEl || document.getElementById(`reply-edit-form-${replyId}`)) return;
+            const original = textEl.textContent;
+            textEl.style.display = 'none';
+            ['reply-edit-btn-' + replyId, 'reply-del-btn-' + replyId].forEach(id => {
+                const el = document.getElementById(id); if (el) el.style.display = 'none';
+            });
+            const form = document.createElement('div');
+            form.id = `reply-edit-form-${replyId}`;
+            form.className = 'mt-1';
+            form.innerHTML = `
+                <input id="reply-edit-input-${replyId}" type="text"
+                    class="w-full px-3 py-1.5 border border-indigo-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    value="${escapeHtml(original)}">
+                <div class="flex gap-2 mt-1.5">
+                    <button onclick="saveReplyEdit(${replyId})" class="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg font-semibold hover:bg-indigo-700 transition">Save</button>
+                    <button onclick="cancelReplyEdit(${replyId})" class="px-3 py-1 border border-gray-200 text-gray-500 text-xs rounded-lg font-semibold hover:bg-gray-50 transition">Cancel</button>
+                </div>`;
+            textEl.after(form);
+            document.getElementById(`reply-edit-input-${replyId}`).focus();
+        }
+
+        function cancelReplyEdit(replyId) {
+            document.getElementById(`reply-text-${replyId}`).style.display = '';
+            const form = document.getElementById(`reply-edit-form-${replyId}`); if (form) form.remove();
+            ['reply-edit-btn-' + replyId, 'reply-del-btn-' + replyId].forEach(id => {
+                const el = document.getElementById(id); if (el) el.style.display = '';
+            });
+        }
+
+        async function saveReplyEdit(replyId) {
+            const input = document.getElementById(`reply-edit-input-${replyId}`);
+            const newText = input.value.trim();
+            if (!newText) return;
+            const res = await fetch(`${API}/replies/${replyId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+                body: JSON.stringify({ reply_text: newText })
+            });
+            if (res.ok) {
+                document.getElementById(`reply-text-${replyId}`).textContent = newText;
+                cancelReplyEdit(replyId);
+            }
+        }
+
+        async function deleteReply(replyId, reviewId) {
+            if (!confirm("Delete this reply?")) return;
+            const res = await fetch(`${API}/replies/${replyId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            });
+            if (res.ok) {
+                const item = document.getElementById(`reply-item-${replyId}`); if (item) item.remove();
+            }
         }
 
         async function reactToReply(replyId, value) {

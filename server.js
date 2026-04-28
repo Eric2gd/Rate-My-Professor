@@ -219,7 +219,7 @@ app.post("/professors", authenticateToken, (req, res) => {
     // Notify all users about the new lecturer
     db.query("SELECT username FROM users", (err2, users) => {
       if (!err2 && users.length > 0) {
-        const link = `/professor-profile.html?id=${profId}`;
+        const link = `professor-profile.html?id=${profId}`;
         const message = `New lecturer added: ${name}`;
         users.forEach(u => {
           db.query(
@@ -371,18 +371,31 @@ app.put("/reviews/:id", authenticateToken, (req, res) => {
 });
 
 // =========================
-// DELETE REVIEW (Protected, owner only)
+// DELETE REVIEW (Protected, owner only) — cascades replies & likes
 // =========================
 app.delete("/reviews/:id", authenticateToken, (req, res) => {
+  const reviewId = req.params.id;
   db.query(
-    "DELETE FROM reviews WHERE id = ? AND username = ?",
-    [req.params.id, req.user.username],
-    (err, result) => {
+    "SELECT id FROM reviews WHERE id = ? AND username = ?",
+    [reviewId, req.user.username],
+    (err, rows) => {
       if (err) return res.status(500).json({ message: "Database error" });
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Review not found or not yours" });
-      }
-      res.json({ message: "Review deleted" });
+      if (rows.length === 0) return res.status(404).json({ message: "Review not found or not yours" });
+
+      // Delete reply_likes for all replies of this review
+      db.query(
+        "DELETE rl FROM reply_likes rl INNER JOIN replies r ON rl.reply_id = r.id WHERE r.review_id = ?",
+        [reviewId], () => {
+          db.query("DELETE FROM replies WHERE review_id = ?", [reviewId], () => {
+            db.query("DELETE FROM review_likes WHERE review_id = ?", [reviewId], () => {
+              db.query("DELETE FROM reviews WHERE id = ?", [reviewId], (err2) => {
+                if (err2) return res.status(500).json({ message: "Database error" });
+                res.json({ message: "Review deleted" });
+              });
+            });
+          });
+        }
+      );
     }
   );
 });
@@ -438,7 +451,7 @@ app.post("/replies", authenticateToken, (req, res) => {
         [review_id],
         (err2, rows) => {
           if (!err2 && rows.length > 0 && rows[0].username !== req.user.username) {
-            const link = `/professor-profile.html?id=${rows[0].professor_id}&review=${review_id}`;
+            const link = `professor-profile.html?id=${rows[0].professor_id}&review=${review_id}`;
             db.query(
               "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
               [rows[0].username, `${req.user.username} replied to your review`, link]
@@ -536,6 +549,78 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
 });
 
 // =========================
+// EDIT REPLY (Protected, owner only)
+// =========================
+app.put("/replies/:id", authenticateToken, (req, res) => {
+  const { reply_text } = req.body;
+  if (!reply_text || !reply_text.trim()) {
+    return res.status(400).json({ message: "reply_text is required" });
+  }
+  db.query(
+    "UPDATE replies SET reply_text = ? WHERE id = ? AND username = ?",
+    [reply_text.trim(), req.params.id, req.user.username],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (result.affectedRows === 0) return res.status(404).json({ message: "Reply not found or not yours" });
+      res.json({ message: "Reply updated" });
+    }
+  );
+});
+
+// =========================
+// DELETE REPLY (Protected, owner only) — cascades reply_likes
+// =========================
+app.delete("/replies/:id", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT id FROM replies WHERE id = ? AND username = ?",
+    [req.params.id, req.user.username],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (rows.length === 0) return res.status(404).json({ message: "Reply not found or not yours" });
+      db.query("DELETE FROM reply_likes WHERE reply_id = ?", [req.params.id], () => {
+        db.query("DELETE FROM replies WHERE id = ?", [req.params.id], (err2) => {
+          if (err2) return res.status(500).json({ message: "Database error" });
+          res.json({ message: "Reply deleted" });
+        });
+      });
+    }
+  );
+});
+
+// =========================
+// UPDATE USERNAME (Protected) — cascades to all related tables
+// =========================
+app.put("/users/username", authenticateToken, (req, res) => {
+  const { new_username } = req.body;
+  if (!new_username || new_username.trim().length < 2) {
+    return res.status(400).json({ message: "Username must be at least 2 characters" });
+  }
+  const trimmed = new_username.trim();
+  const old = req.user.username;
+  if (trimmed === old) return res.status(400).json({ message: "New username is the same as current" });
+
+  db.query("SELECT id FROM users WHERE username = ?", [trimmed], (err, rows) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (rows.length > 0) return res.status(400).json({ message: "Username already taken" });
+
+    const tables = [
+      ["UPDATE reviews SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE replies SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE notifications SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE review_likes SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE reply_likes SET username = ? WHERE username = ?", [trimmed, old]],
+    ];
+    tables.forEach(([sql, params]) => db.query(sql, params, () => {}));
+
+    db.query("UPDATE users SET username = ? WHERE username = ?", [trimmed, old], (err2) => {
+      if (err2) return res.status(500).json({ message: "Error updating username" });
+      const newToken = jwt.sign({ username: trimmed }, SECRET, { expiresIn: "1h" });
+      res.json({ message: "Username updated", token: newToken, username: trimmed });
+    });
+  });
+});
+
+// =========================
 // REACT TO REVIEW — like (1) or dislike (-1), toggle off if same (Protected)
 // =========================
 app.post("/reviews/:id/react", authenticateToken, (req, res) => {
@@ -561,6 +646,24 @@ app.post("/reviews/:id/react", authenticateToken, (req, res) => {
     );
   };
 
+  // Notify the review author when someone likes their review (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      "SELECT username, professor_id FROM reviews WHERE id = ?",
+      [reviewId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${reviewId}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your review`, link]
+          );
+        }
+      }
+    );
+  };
+
   db.query(
     "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
     [reviewId, req.user.username],
@@ -568,18 +671,21 @@ app.post("/reviews/:id/react", authenticateToken, (req, res) => {
       if (err) return res.status(500).json({ message: "Database error" });
       if (existing.length > 0) {
         if (existing[0].value === value) {
+          // Toggle off — no notification
           db.query("DELETE FROM review_likes WHERE review_id = ? AND username = ?",
             [reviewId, req.user.username],
             (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
         } else {
+          // Switching vote — notify if switching TO like
           db.query("UPDATE review_likes SET value = ? WHERE review_id = ? AND username = ?",
             [value, reviewId, req.user.username],
-            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
         }
       } else {
+        // New vote — notify if it's a like
         db.query("INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)",
           [reviewId, req.user.username, value],
-          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
       }
     }
   );
@@ -611,6 +717,25 @@ app.post("/replies/:id/react", authenticateToken, (req, res) => {
     );
   };
 
+  // Notify the reply author when someone likes their comment (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      `SELECT rp.username, r.professor_id, rp.review_id
+       FROM replies rp JOIN reviews r ON rp.review_id = r.id WHERE rp.id = ?`,
+      [replyId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${rows[0].review_id}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your comment`, link]
+          );
+        }
+      }
+    );
+  };
+
   db.query(
     "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
     [replyId, req.user.username],
@@ -628,14 +753,14 @@ app.post("/replies/:id/react", authenticateToken, (req, res) => {
           db.query(
             "UPDATE reply_likes SET value = ? WHERE reply_id = ? AND username = ?",
             [value, replyId, req.user.username],
-            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
           );
         }
       } else {
         db.query(
           "INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)",
           [replyId, req.user.username, value],
-          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
         );
       }
     }
@@ -652,6 +777,20 @@ app.get("/notifications", authenticateToken, (req, res) => {
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json(results);
+    }
+  );
+});
+
+// =========================
+// CLEAR ALL NOTIFICATIONS (Protected)
+// =========================
+app.delete("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "DELETE FROM notifications WHERE username = ?",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications cleared" });
     }
   );
 });

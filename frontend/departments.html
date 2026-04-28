@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="theme.js"></script>
 </head>
 <body class="flex min-h-screen">
 
@@ -70,18 +71,18 @@
     <main class="flex-1 flex flex-col">
         <!-- Header -->
         <header class="h-16 flex items-center justify-between px-4 sm:px-6 glass-header">
-            <div class="flex items-center gap-2 text-gray-500">
+            <!-- Mobile logo -->
+            <div class="flex items-center gap-2 sm:hidden">
+                <div class="rmp-logo-icon" style="width:34px;height:34px;font-size:14px"><i class="fas fa-university"></i></div>
+                <span class="text-base font-bold text-gray-800">RateMyProf</span>
+            </div>
+            <!-- Desktop breadcrumb -->
+            <div class="hidden sm:flex items-center gap-2 text-gray-500">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <span class="text-sm font-semibold text-gray-800">Departments</span>
             </div>
             <div class="flex items-center gap-3">
-                <div class="glass-search relative w-56 hidden sm:flex items-center">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-search text-sm"></i>
-                    </span>
-                    <input id="search-input" type="search" placeholder="Filter by department..." class="block w-full pl-9 pr-3 py-2.5 text-sm">
-                </div>
                 <!-- Notification bell -->
                 <div id="notif-wrapper">
                     <button class="glass-bell" id="notif-bell" onclick="toggleNotifications()">
@@ -109,9 +110,16 @@
 
         <!-- Page content -->
         <div class="p-4 sm:p-8">
-            <div class="mb-8">
+            <div class="mb-6">
                 <h1 class="text-2xl font-extrabold text-gray-800">Departments</h1>
                 <p class="text-sm text-gray-400 mt-1">Browse professors by department and see average ratings.</p>
+            </div>
+            <!-- Search -->
+            <div class="glass-search relative mb-6">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                    <i class="fas fa-search text-sm"></i>
+                </span>
+                <input id="search-input" type="search" placeholder="Filter departments..." class="block w-full pl-9 pr-3 py-2.5 text-sm">
             </div>
 
             <div id="departments-container" class="space-y-6">
@@ -172,8 +180,7 @@
             document.getElementById("header-avatar").src =
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             const action = document.getElementById("header-action");
-            action.textContent = "View Profile";
-            action.removeAttribute("href");
+            action.style.display = 'none';
             document.getElementById("sidebar-username").textContent = username;
             document.getElementById("sidebar-avatar").src =
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
