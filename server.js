@@ -28,9 +28,16 @@ const professorRoutes = require("./routes/ProfessorRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const replyRoutes = require("./routes/replyRoutes");
 
+const corsOpts = {
+  origin: [
+    "http://localhost:8000"
+  ],
+  optionsSuccessStatus: 200
+}
+
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOpts));
 
 const SECRET = "mysecretkey";
 
