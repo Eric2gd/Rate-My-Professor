@@ -1,40 +1,11 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
-<<<<<<< Updated upstream
 const mysql = require("mysql2");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-=======
-
-const db = require("./config/db");
-const authenticateToken = require("./middleware/authMiddleware");
-
-// Repositories
-// using dependency injection pattern 
-const UserRepository = require("./repositories/UserRepository");
-const ProfessorRepository = require("./repositories/ProfessorRepository");
-const ReviewRepository = require("./repositories/ReviewRepository");
-const ReplyRepository = require("./repositories/ReplyRepository");
-
-// Services
-const AuthService = require("./services/AuthService");
-const ProfessorService = require("./services/ProfessorService");
-const ReviewService = require("./services/ReviewService");
-const ReplyService = require("./services/ReplyService");
-
-// Controllers
-const AuthController = require("./controllers/AuthController");
-const ProfessorController = require("./controllers/ProfessorController");
-const ReviewController = require("./controllers/ReviewController");
-const ReplyController = require("./controllers/ReplyController");
-
-// Routes
-const authRoutes = require("./routes/authRoutes");
-const professorRoutes = require("./routes/professorRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const replyRoutes = require("./routes/replyRoutes");
->>>>>>> Stashed changes
 
 const app = express();
 app.use(express.json());
@@ -69,29 +40,69 @@ const upload = multer({
 
 const SECRET = "mysecretkey";
 
-// Dependency Injection
-const userRepo = new UserRepository(db);
-const professorRepo = new ProfessorRepository(db);
-const reviewRepo = new ReviewRepository(db);
-const replyRepo = new ReplyRepository(db);
+// =========================
+// DATABASE CONNECTION
+// =========================
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "rate_my_professor"
+});
 
-const authService = new AuthService(userRepo, SECRET);
-const professorService = new ProfessorService(professorRepo);
-const reviewService = new ReviewService(reviewRepo);
-const replyService = new ReplyService(replyRepo);
+db.connect(err => {
+  if (err) throw err;
+  console.log("Database connected!");
+  db.query(`
+    CREATE TABLE IF NOT EXISTS review_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      review_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_review_user (review_id, username),
+      KEY idx_review_likes_review_id (review_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("review_likes table error:", err); });
 
-const authController = new AuthController(authService);
-const professorController = new ProfessorController(professorService);
-const reviewController = new ReviewController(reviewService);
-const replyController = new ReplyController(replyService);
+  db.query(`
+    CREATE TABLE IF NOT EXISTS reply_likes (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      reply_id INT(11) NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      value TINYINT(1) NOT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_reply_user (reply_id, username),
+      KEY idx_reply_likes_reply_id (reply_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("reply_likes table error:", err); });
 
-// Routes
-app.use("/auth", authRoutes(authController));
-app.use("/professors", professorRoutes(professorController, authenticateToken));
-app.use("/reviews", reviewRoutes(reviewController, authenticateToken));
-app.use("/replies", replyRoutes(replyController, authenticateToken));
+  db.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      username VARCHAR(100) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      message TEXT NOT NULL,
+      link VARCHAR(255) DEFAULT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_notifications_username (username)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `, (err) => { if (err) console.error("notifications table error:", err); });
+});
 
-<<<<<<< Updated upstream
+// =========================
+// REGISTER
+// =========================
+app.post("/register", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Check if user exists
+    db.query("SELECT * FROM users WHERE username = ?", [username], async (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+
       if (results.length > 0) {
         return res.status(400).json({ message: "User already exists" });
       }
@@ -146,6 +157,15 @@ app.post("/login", async (req, res) => {
 // =========================
 // AUTH MIDDLEWARE
 // =========================
+function optionalAuth(req, res, next) {
+  const token = (req.headers["authorization"] || "").split(" ")[1];
+  if (!token) { req.user = null; return next(); }
+  jwt.verify(token, SECRET, (err, user) => {
+    req.user = err ? null : user;
+    next();
+  });
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -160,11 +180,21 @@ function authenticateToken(req, res, next) {
 }
 
 // =========================
+// GET DEPARTMENTS
+// =========================
+app.get("/departments", (req, res) => {
+  db.query("SELECT id, name FROM departments ORDER BY name ASC", (err, results) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    res.json(results);
+  });
+});
+
+// =========================
 // GET PROFESSORS
 // =========================
 app.get("/professors", (req, res) => {
   db.query(
-    `SELECT p.id, p.name, p.profile_picture, p.created_at,
+    `SELECT p.id, p.name, p.profile_picture, p.bio, p.created_at,
             COALESCE(d.name, 'Unknown') AS department
      FROM professors p
      LEFT JOIN departments d ON p.department_id = d.id`,
@@ -184,9 +214,25 @@ app.post("/professors", authenticateToken, (req, res) => {
   db.query("INSERT INTO professors (name, department_id) VALUES (?, ?)", [name, department_id], (err, result) => {
     if (err) return res.status(500).json({ message: "Error adding professor" });
 
+    const profId = result.insertId;
+
+    // Notify all users about the new lecturer
+    db.query("SELECT username FROM users", (err2, users) => {
+      if (!err2 && users.length > 0) {
+        const link = `professor-profile.html?id=${profId}`;
+        const message = `New lecturer added: ${name}`;
+        users.forEach(u => {
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'professor_added', ?, ?)",
+            [u.username, message, link]
+          );
+        });
+      }
+    });
+
     res.json({
       message: "Professor added",
-      professor: { id: result.insertId, name, department_id }
+      professor: { id: profId, name, department_id }
     });
   });
 });
@@ -196,20 +242,30 @@ app.post("/professors", authenticateToken, (req, res) => {
 // ?professor_id=X  → reviews for one professor
 // (no param)       → global feed (all reviews, newest first, with professor name)
 // =========================
-app.get("/reviews", (req, res) => {
+app.get("/reviews", optionalAuth, (req, res) => {
   const { professor_id } = req.query;
+  const viewer = req.user ? req.user.username : null;
+
+  const likesCols = `
+    COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+    COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+    MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote`;
 
   if (professor_id) {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
        WHERE r.professor_id = ?
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC`,
-      [professor_id],
+      [viewer, professor_id],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -217,14 +273,19 @@ app.get("/reviews", (req, res) => {
     );
   } else {
     db.query(
-      `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
-              u.profile_picture AS user_picture
+      `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+              u.profile_picture AS user_picture, ${likesCols}
        FROM reviews r
        JOIN professors p ON r.professor_id = p.id
        LEFT JOIN departments d ON p.department_id = d.id
        LEFT JOIN users u ON r.username = u.username
+       LEFT JOIN review_likes rl ON r.id = rl.review_id
+       GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+                p.name, d.name, u.profile_picture
        ORDER BY r.created_at DESC
        LIMIT 50`,
+      [viewer],
       (err, results) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.json(results);
@@ -265,11 +326,17 @@ app.post("/reviews", authenticateToken, (req, res) => {
 // =========================
 app.get("/reviews/mine", authenticateToken, (req, res) => {
   db.query(
-    `SELECT r.*, p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department
+    `SELECT r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+            p.name AS professor_name, COALESCE(d.name, 'Unknown') AS department,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes
      FROM reviews r
      JOIN professors p ON r.professor_id = p.id
      LEFT JOIN departments d ON p.department_id = d.id
+     LEFT JOIN review_likes rl ON r.id = rl.review_id
      WHERE r.username = ?
+     GROUP BY r.id, r.professor_id, r.username, r.review_text, r.rating, r.created_at,
+              p.name, d.name
      ORDER BY r.created_at DESC`,
     [req.user.username],
     (err, results) => {
@@ -304,18 +371,31 @@ app.put("/reviews/:id", authenticateToken, (req, res) => {
 });
 
 // =========================
-// DELETE REVIEW (Protected, owner only)
+// DELETE REVIEW (Protected, owner only) — cascades replies & likes
 // =========================
 app.delete("/reviews/:id", authenticateToken, (req, res) => {
+  const reviewId = req.params.id;
   db.query(
-    "DELETE FROM reviews WHERE id = ? AND username = ?",
-    [req.params.id, req.user.username],
-    (err, result) => {
+    "SELECT id FROM reviews WHERE id = ? AND username = ?",
+    [reviewId, req.user.username],
+    (err, rows) => {
       if (err) return res.status(500).json({ message: "Database error" });
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Review not found or not yours" });
-      }
-      res.json({ message: "Review deleted" });
+      if (rows.length === 0) return res.status(404).json({ message: "Review not found or not yours" });
+
+      // Delete reply_likes for all replies of this review
+      db.query(
+        "DELETE rl FROM reply_likes rl INNER JOIN replies r ON rl.reply_id = r.id WHERE r.review_id = ?",
+        [reviewId], () => {
+          db.query("DELETE FROM replies WHERE review_id = ?", [reviewId], () => {
+            db.query("DELETE FROM review_likes WHERE review_id = ?", [reviewId], () => {
+              db.query("DELETE FROM reviews WHERE id = ?", [reviewId], (err2) => {
+                if (err2) return res.status(500).json({ message: "Database error" });
+                res.json({ message: "Review deleted" });
+              });
+            });
+          });
+        }
+      );
     }
   );
 });
@@ -323,17 +403,25 @@ app.delete("/reviews/:id", authenticateToken, (req, res) => {
 // =========================
 // GET REPLIES (by review)
 // =========================
-app.get("/replies", (req, res) => {
+app.get("/replies", optionalAuth, (req, res) => {
   const { review_id } = req.query;
   if (!review_id) return res.status(400).json({ message: "review_id is required" });
 
+  const viewer = req.user ? req.user.username : null;
+
   db.query(
-    `SELECT rp.*, u.profile_picture AS user_picture
+    `SELECT rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at,
+            u.profile_picture AS user_picture,
+            COALESCE(SUM(CASE WHEN rl.value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+            COALESCE(SUM(CASE WHEN rl.value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+            MAX(CASE WHEN rl.username = ? THEN rl.value ELSE NULL END) AS my_vote
      FROM replies rp
      LEFT JOIN users u ON rp.username = u.username
+     LEFT JOIN reply_likes rl ON rp.id = rl.reply_id
      WHERE rp.review_id = ?
+     GROUP BY rp.id, rp.review_id, rp.username, rp.reply_text, rp.created_at, u.profile_picture
      ORDER BY rp.created_at ASC`,
-    [review_id],
+    [viewer, review_id],
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json(results);
@@ -356,6 +444,22 @@ app.post("/replies", authenticateToken, (req, res) => {
     [review_id, req.user.username, reply_text],
     (err, result) => {
       if (err) return res.status(500).json({ message: "Error saving reply" });
+
+      // Notify the review author (if different from replier)
+      db.query(
+        "SELECT r.username, r.professor_id FROM reviews r WHERE r.id = ?",
+        [review_id],
+        (err2, rows) => {
+          if (!err2 && rows.length > 0 && rows[0].username !== req.user.username) {
+            const link = `professor-profile.html?id=${rows[0].professor_id}&review=${review_id}`;
+            db.query(
+              "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
+              [rows[0].username, `${req.user.username} replied to your review`, link]
+            );
+          }
+        }
+      );
+
       res.json({
         message: "Reply posted",
         reply: { id: result.insertId, review_id, username: req.user.username, reply_text }
@@ -445,10 +549,269 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
 });
 
 // =========================
+// EDIT REPLY (Protected, owner only)
+// =========================
+app.put("/replies/:id", authenticateToken, (req, res) => {
+  const { reply_text } = req.body;
+  if (!reply_text || !reply_text.trim()) {
+    return res.status(400).json({ message: "reply_text is required" });
+  }
+  db.query(
+    "UPDATE replies SET reply_text = ? WHERE id = ? AND username = ?",
+    [reply_text.trim(), req.params.id, req.user.username],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (result.affectedRows === 0) return res.status(404).json({ message: "Reply not found or not yours" });
+      res.json({ message: "Reply updated" });
+    }
+  );
+});
+
+// =========================
+// DELETE REPLY (Protected, owner only) — cascades reply_likes
+// =========================
+app.delete("/replies/:id", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT id FROM replies WHERE id = ? AND username = ?",
+    [req.params.id, req.user.username],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (rows.length === 0) return res.status(404).json({ message: "Reply not found or not yours" });
+      db.query("DELETE FROM reply_likes WHERE reply_id = ?", [req.params.id], () => {
+        db.query("DELETE FROM replies WHERE id = ?", [req.params.id], (err2) => {
+          if (err2) return res.status(500).json({ message: "Database error" });
+          res.json({ message: "Reply deleted" });
+        });
+      });
+    }
+  );
+});
+
+// =========================
+// UPDATE USERNAME (Protected) — cascades to all related tables
+// =========================
+app.put("/users/username", authenticateToken, (req, res) => {
+  const { new_username } = req.body;
+  if (!new_username || new_username.trim().length < 2) {
+    return res.status(400).json({ message: "Username must be at least 2 characters" });
+  }
+  const trimmed = new_username.trim();
+  const old = req.user.username;
+  if (trimmed === old) return res.status(400).json({ message: "New username is the same as current" });
+
+  db.query("SELECT id FROM users WHERE username = ?", [trimmed], (err, rows) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (rows.length > 0) return res.status(400).json({ message: "Username already taken" });
+
+    const tables = [
+      ["UPDATE reviews SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE replies SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE notifications SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE review_likes SET username = ? WHERE username = ?", [trimmed, old]],
+      ["UPDATE reply_likes SET username = ? WHERE username = ?", [trimmed, old]],
+    ];
+    tables.forEach(([sql, params]) => db.query(sql, params, () => {}));
+
+    db.query("UPDATE users SET username = ? WHERE username = ?", [trimmed, old], (err2) => {
+      if (err2) return res.status(500).json({ message: "Error updating username" });
+      const newToken = jwt.sign({ username: trimmed }, SECRET, { expiresIn: "1h" });
+      res.json({ message: "Username updated", token: newToken, username: trimmed });
+    });
+  });
+});
+
+// =========================
+// REACT TO REVIEW — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/reviews/:id/react", authenticateToken, (req, res) => {
+  const reviewId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM review_likes WHERE review_id = ?`,
+      [req.user.username, reviewId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  // Notify the review author when someone likes their review (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      "SELECT username, professor_id FROM reviews WHERE id = ?",
+      [reviewId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${reviewId}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your review`, link]
+          );
+        }
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
+    [reviewId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          // Toggle off — no notification
+          db.query("DELETE FROM review_likes WHERE review_id = ? AND username = ?",
+            [reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+        } else {
+          // Switching vote — notify if switching TO like
+          db.query("UPDATE review_likes SET value = ? WHERE review_id = ? AND username = ?",
+            [value, reviewId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
+        }
+      } else {
+        // New vote — notify if it's a like
+        db.query("INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)",
+          [reviewId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
+      }
+    }
+  );
+});
+
+// =========================
+// REACT TO REPLY — like (1) or dislike (-1), toggle off if same (Protected)
+// =========================
+app.post("/replies/:id/react", authenticateToken, (req, res) => {
+  const replyId = req.params.id;
+  const { value } = req.body;
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ message: "value must be 1 or -1" });
+  }
+
+  const returnCounts = () => {
+    db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN value = 1  THEN 1 ELSE 0 END), 0) AS likes,
+         COALESCE(SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END), 0) AS dislikes,
+         MAX(CASE WHEN username = ? THEN value ELSE NULL END) AS my_vote
+       FROM reply_likes WHERE reply_id = ?`,
+      [req.user.username, replyId],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: "Database error" });
+        const r = rows[0];
+        res.json({ likes: Number(r.likes), dislikes: Number(r.dislikes), my_vote: r.my_vote });
+      }
+    );
+  };
+
+  // Notify the reply author when someone likes their comment (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      `SELECT rp.username, r.professor_id, rp.review_id
+       FROM replies rp JOIN reviews r ON rp.review_id = r.id WHERE rp.id = ?`,
+      [replyId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${rows[0].review_id}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your comment`, link]
+          );
+        }
+      }
+    );
+  };
+
+  db.query(
+    "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
+    [replyId, req.user.username],
+    (err, existing) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+
+      if (existing.length > 0) {
+        if (existing[0].value === value) {
+          db.query(
+            "DELETE FROM reply_likes WHERE reply_id = ? AND username = ?",
+            [replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          );
+        } else {
+          db.query(
+            "UPDATE reply_likes SET value = ? WHERE reply_id = ? AND username = ?",
+            [value, replyId, req.user.username],
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
+          );
+        }
+      } else {
+        db.query(
+          "INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)",
+          [replyId, req.user.username, value],
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
+        );
+      }
+    }
+  );
+});
+
+// =========================
+// GET NOTIFICATIONS (Protected)
+// =========================
+app.get("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT * FROM notifications WHERE username = ? ORDER BY created_at DESC LIMIT 50",
+    [req.user.username],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(results);
+    }
+  );
+});
+
+// =========================
+// CLEAR ALL NOTIFICATIONS (Protected)
+// =========================
+app.delete("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "DELETE FROM notifications WHERE username = ?",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications cleared" });
+    }
+  );
+});
+
+// =========================
+// MARK NOTIFICATIONS READ (Protected)
+// =========================
+app.put("/notifications/mark-read", authenticateToken, (req, res) => {
+  db.query(
+    "UPDATE notifications SET is_read = 1 WHERE username = ? AND is_read = 0",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications marked as read" });
+    }
+  );
+});
+
+// =========================
 // START SERVER
 // =========================
-=======
->>>>>>> Stashed changes
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
