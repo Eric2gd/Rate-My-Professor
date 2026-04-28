@@ -1,4 +1,4 @@
-const NOTIF_API = 'https://rate-my-professor-phi.vercel.app/';
+const NOTIF_API = 'https://rate-my-professor-phi.vercel.app';
 
 function _timeAgo(dateStr) {
     const diff  = Date.now() - new Date(dateStr).getTime();

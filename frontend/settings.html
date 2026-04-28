@@ -222,7 +222,7 @@
     </main>
 
     <script>
-        const API = "https://rate-my-professor-phi.vercel.app/";
+        const API = "https://rate-my-professor-phi.vercel.app";
 
         function getUsernameFromToken(token) {
             try { return JSON.parse(atob(token.split(".")[1])).username || "User"; }
