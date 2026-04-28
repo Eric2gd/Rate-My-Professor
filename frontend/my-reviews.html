@@ -373,15 +373,18 @@
                     ? `${API}/${rp.user_picture}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
                 const date = new Date(rp.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-                const likeClass    = rp.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600";
-                const dislikeClass = rp.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500";
+                const likeClass    = rp.my_vote === 1  ? "like-active"    : "";
+                const dislikeClass = rp.my_vote === -1 ? "dislike-active" : "";
                 return `
-                    <div class="flex gap-3 items-start">
-                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
-                        <div class="flex-1 min-w-0">
+                    <div class="flex gap-2">
+                        <div class="flex flex-col items-center flex-shrink-0" style="width:32px">
+                            <img class="w-8 h-8 rounded-xl object-cover" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
+                            <div class="w-0.5 bg-gray-100 flex-1 mt-1.5 rounded-full" style="min-height:12px"></div>
+                        </div>
+                        <div class="flex-1 min-w-0 pb-3">
                             <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
                             <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
-                            <div class="flex items-center gap-2 mt-2">
+                            <div class="flex items-center gap-1.5 mt-1.5">
                                 <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
                                     class="react-btn react-sm ${likeClass}">
                                     <i class="fas fa-thumbs-up"></i>

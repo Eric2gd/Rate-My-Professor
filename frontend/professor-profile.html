@@ -12,51 +12,56 @@
 <body class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 hidden lg:flex flex-col glass-sidebar">
-        <div class="p-6 flex items-center gap-2">
-            <div class="bg-indigo-600 p-1.5 rounded-lg">
-                <i class="fas fa-university text-white text-xl"></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800 tracking-tight">RateMyProf</span>
+    <aside id="sidebar" class="rmp-sidebar hidden lg:flex">
+        <div class="rmp-logo">
+            <div class="rmp-logo-icon"><i class="fas fa-university"></i></div>
+            <span class="rmp-label text-base font-bold text-gray-800" style="flex:1">RateMyProf</span>
+            <button id="pin-btn" class="rmp-pin-btn" onclick="togglePin()" title="Pin sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 mt-4">
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
-            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-th-large w-5"></i> <span class="ml-3">Home</span>
+        <nav class="rmp-nav">
+            <span class="rmp-section-title">MENU</span>
+            <a href="dashboard.html" class="rmp-nav-item">
+                <i class="fas fa-th-large"></i><span class="rmp-label">Home</span>
             </a>
-            <a href="professors.html" class="flex items-center px-6 py-3 sidebar-active">
-                <i class="fas fa-chalkboard-teacher w-5"></i> <span class="ml-3 font-medium">Professors</span>
+            <a href="professors.html" class="rmp-nav-item rmp-active">
+                <i class="fas fa-chalkboard-teacher"></i><span class="rmp-label">Professors</span>
             </a>
-            <a href="departments.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-building w-5"></i> <span class="ml-3">Departments</span>
+            <a href="departments.html" class="rmp-nav-item">
+                <i class="fas fa-building"></i><span class="rmp-label">Departments</span>
             </a>
-            <a href="my-reviews.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-star w-5"></i> <span class="ml-3">My Reviews</span>
+            <a href="my-reviews.html" class="rmp-nav-item">
+                <i class="fas fa-star"></i><span class="rmp-label">My Reviews</span>
             </a>
 
-            <p class="px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-8 mb-2">Account</p>
+            <span class="rmp-section-title">ACCOUNT</span>
             <div id="nav-guest">
-                <a href="login.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-sign-in-alt w-5"></i> <span class="ml-3">Sign In</span>
+                <a href="login.html" class="rmp-nav-item">
+                    <i class="fas fa-sign-in-alt"></i><span class="rmp-label">Sign In</span>
                 </a>
-                <a href="register.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-plus w-5"></i> <span class="ml-3">Register</span>
+                <a href="register.html" class="rmp-nav-item">
+                    <i class="fas fa-user-plus"></i><span class="rmp-label">Register</span>
                 </a>
             </div>
             <div id="nav-loggedin" class="hidden">
-                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50">
-                    <i class="fas fa-user-circle w-5"></i> <span id="nav-username" class="ml-3 truncate">Profile</span>
+                <a href="settings.html" class="rmp-nav-item">
+                    <i class="fas fa-user-circle"></i><span id="nav-username" class="rmp-label truncate">Profile</span>
                 </a>
-                <button onclick="logout()" class="w-full flex items-center px-6 py-3 text-gray-500 hover:bg-red-50 hover:text-red-500 transition">
-                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Log Out</span>
+                <button onclick="logout()" class="rmp-nav-item" style="color:#ef4444" onmouseover="this.style.background='rgba(254,242,242,0.8)'" onmouseout="this.style.background=''">
+                    <i class="fas fa-sign-out-alt"></i><span class="rmp-label">Log Out</span>
                 </button>
             </div>
         </nav>
 
-        <div class="m-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <p id="sidebar-username" class="text-xs text-gray-400 mb-1">Not logged in</p>
-            <p class="text-sm font-bold text-gray-800">RateMyProf</p>
+        <div class="rmp-footer">
+            <img id="sidebar-avatar" class="rmp-footer-avatar"
+                 src="https://ui-avatars.com/api/?name=Guest&background=6366f1&color=fff" alt="">
+            <div class="rmp-label" style="min-width:0">
+                <p id="sidebar-username" class="text-xs font-semibold text-gray-700 truncate" style="max-width:140px">Not logged in</p>
+                <a href="settings.html" class="text-[10px] text-indigo-400 hover:underline">View Profile</a>
+            </div>
         </div>
     </aside>
 
@@ -64,8 +69,12 @@
     <main class="flex-1 flex flex-col">
         <!-- Top Navigation -->
         <header class="h-16 flex items-center justify-between px-8 glass-header">
-            <div class="flex items-center gap-3 text-gray-500">
+            <div class="flex items-center gap-2 text-gray-500 flex-wrap">
                 <a href="dashboard.html" class="hover:text-indigo-600 text-sm font-medium">Dashboard</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <a href="departments.html" class="hover:text-indigo-600 text-sm font-medium">Departments</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <a id="breadcrumb-dept" href="departments.html" class="hover:text-indigo-600 text-sm font-medium">—</a>
                 <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                 <span id="breadcrumb-name" class="text-sm font-semibold text-gray-800">Professor Profile</span>
             </div>
@@ -166,7 +175,7 @@
                         <button id="sort-recent" class="sort-btn sort-active" onclick="setSortMode('recent')">Most Recent</button>
                         <button id="sort-liked"  class="sort-btn"             onclick="setSortMode('liked')">Most Liked</button>
                     </div>
-                    <div id="reviews-list" class="space-y-8">
+                    <div id="reviews-list">
                         <p class="text-gray-400 text-sm text-center py-8">No reviews yet. Be the first!</p>
                     </div>
                 </div>
@@ -181,6 +190,16 @@
         let professorId = null;
         let allReviews  = [];
         let sortMode    = 'recent';
+
+        // ── Sidebar pin ───────────────────────────────────────────────────────
+        const sidebar = document.getElementById('sidebar');
+        if (localStorage.getItem('sidebarPinned') === 'true') sidebar.classList.add('pinned');
+        function togglePin() {
+            sidebar.classList.toggle('pinned');
+            localStorage.setItem('sidebarPinned', sidebar.classList.contains('pinned'));
+            document.getElementById('pin-btn').querySelector('i').className =
+                sidebar.classList.contains('pinned') ? 'fas fa-times' : 'fas fa-thumbtack';
+        }
 
         const ratingLabels = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" };
 
@@ -199,15 +218,15 @@
             if (!token) return;
             const username = getUsernameFromToken(token);
 
+            const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
             document.getElementById("header-username").textContent = username;
-            document.getElementById("header-avatar").src =
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=6366f1&color=fff`;
+            document.getElementById("header-avatar").src  = avatarFallback;
+            document.getElementById("sidebar-avatar").src = avatarFallback;
             document.getElementById("sidebar-username").textContent = username;
             document.getElementById("nav-username").textContent = username;
             document.getElementById("nav-guest").classList.add("hidden");
             document.getElementById("nav-loggedin").classList.remove("hidden");
 
-            // Fetch real profile picture
             try {
                 const res = await fetch(`${API}/users/me`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -215,7 +234,9 @@
                 if (res.ok) {
                     const user = await res.json();
                     if (user.profile_picture) {
-                        document.getElementById("header-avatar").src = `${API}/${user.profile_picture}`;
+                        const pic = `${API}/${user.profile_picture}`;
+                        document.getElementById("header-avatar").src  = pic;
+                        document.getElementById("sidebar-avatar").src = pic;
                     }
                 }
             } catch {}
@@ -268,6 +289,10 @@
             document.getElementById("prof-department").textContent = prof.department;
             document.getElementById("breadcrumb-name").textContent = prof.name;
             document.title = `${prof.name} - Rate My Prof`;
+
+            const deptCrumb = document.getElementById("breadcrumb-dept");
+            deptCrumb.textContent = prof.department;
+            deptCrumb.href = `departments.html?dept=${encodeURIComponent(prof.department)}`;
             if (prof.bio) {
                 const bioEl = document.getElementById("prof-bio");
                 bioEl.textContent = prof.bio;
@@ -350,7 +375,7 @@
 
             const sorted = getSorted(reviews);
 
-            list.innerHTML = sorted.map((r, i) => {
+            list.innerHTML = sorted.map(r => {
                 const date = new Date(r.created_at).toLocaleDateString("en-GB", {
                     day: "numeric", month: "short", year: "numeric"
                 });
@@ -360,59 +385,60 @@
                 const likeClass    = r.my_vote === 1  ? "like-active"    : "";
                 const dislikeClass = r.my_vote === -1 ? "dislike-active" : "";
                 return `
-                    <div id="review-${r.id}" class="${i > 0 ? "border-t border-gray-50 pt-8" : ""}">
-                        <div class="flex gap-6">
-                            <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
+                    <div id="review-${r.id}" class="flex gap-3">
+                        <!-- Avatar + thread line -->
+                        <div class="flex flex-col items-center flex-shrink-0" style="width:44px">
+                            <img class="w-11 h-11 rounded-2xl object-cover border-2 border-gray-50"
                                  src="${avatarUrl}" alt="${escapeHtml(r.username)}">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 class="font-bold text-gray-800">${escapeHtml(r.username)}</h4>
-                                        <p class="text-xs text-gray-400 font-medium">${date}</p>
-                                    </div>
-                                    <div class="flex text-sm">${renderStars(r.rating)}</div>
+                            <div class="w-0.5 bg-gray-100 flex-1 mt-2 rounded-full" style="min-height:24px"></div>
+                        </div>
+                        <!-- Content -->
+                        <div class="flex-1 pb-5">
+                            <div class="flex justify-between items-start mb-1">
+                                <div>
+                                    <span class="font-bold text-gray-800 text-sm">${escapeHtml(r.username)}</span>
+                                    <span class="text-xs text-gray-400 ml-2">${date}</span>
                                 </div>
-                                <p class="text-gray-500 text-sm leading-relaxed mb-4">${escapeHtml(r.review_text)}</p>
-
-                                <!-- Like / dislike row -->
-                                <div class="flex items-center gap-2 mb-3 flex-wrap">
-                                    <button id="rev-like-btn-${r.id}" onclick="reactToReview(${r.id}, 1)"
-                                        class="react-btn ${likeClass}">
-                                        <i class="fas fa-thumbs-up"></i>
-                                        <span id="rev-like-count-${r.id}">${r.likes || 0}</span>
-                                    </button>
-                                    <button id="rev-dislike-btn-${r.id}" onclick="reactToReview(${r.id}, -1)"
-                                        class="react-btn ${dislikeClass}">
-                                        <i class="fas fa-thumbs-down"></i>
-                                        <span id="rev-dislike-count-${r.id}">${r.dislikes || 0}</span>
-                                    </button>
-                                    <div class="flex items-center gap-3 ml-1 text-xs font-semibold text-gray-400">
-                                        <button onclick="toggleReplies(${r.id})"
-                                            class="flex items-center gap-1 hover:text-indigo-600 transition">
-                                            <i class="far fa-comment"></i>
-                                            <span id="reply-count-${r.id}">Replies</span>
-                                        </button>
-                                        <button onclick="toggleReplyBox(${r.id})"
-                                            class="flex items-center gap-1 hover:text-indigo-600 transition">
-                                            <i class="fas fa-reply text-[10px]"></i> Reply
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Reply input box (hidden by default) -->
-                                <div id="reply-box-${r.id}" class="hidden mt-2 flex gap-2">
-                                    <input id="reply-input-${r.id}" type="text" placeholder="Write a reply..."
-                                        class="flex-1 px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                    <button onclick="submitReply(${r.id})"
-                                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
-                                        Post
-                                    </button>
-                                </div>
-                                <p id="reply-msg-${r.id}" class="text-xs mt-1 min-h-[16px]"></p>
-
-                                <!-- Replies list (hidden by default) -->
-                                <div id="replies-${r.id}" class="hidden mt-4 space-y-3 pl-2 border-l-2 border-indigo-50"></div>
+                                <div class="flex text-sm">${renderStars(r.rating)}</div>
                             </div>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
+
+                            <!-- Single action row -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button id="rev-like-btn-${r.id}" onclick="reactToReview(${r.id}, 1)"
+                                    class="react-btn react-sm ${likeClass}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span id="rev-like-count-${r.id}">${r.likes || 0}</span>
+                                </button>
+                                <button id="rev-dislike-btn-${r.id}" onclick="reactToReview(${r.id}, -1)"
+                                    class="react-btn react-sm ${dislikeClass}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span id="rev-dislike-count-${r.id}">${r.dislikes || 0}</span>
+                                </button>
+                                <button onclick="toggleReplies(${r.id})"
+                                    class="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-indigo-600 transition ml-1">
+                                    <i class="far fa-comment text-[10px]"></i>
+                                    <span id="reply-count-${r.id}">Replies</span>
+                                </button>
+                                <button onclick="toggleReplyBox(${r.id})"
+                                    class="flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-indigo-600 transition">
+                                    <i class="fas fa-reply text-[10px]"></i> Reply
+                                </button>
+                            </div>
+
+                            <!-- Reply input (hidden) -->
+                            <div id="reply-box-${r.id}" class="hidden mt-3 flex gap-2">
+                                <input id="reply-input-${r.id}" type="text" placeholder="Write a reply..."
+                                    class="flex-1 px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <button onclick="submitReply(${r.id})"
+                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">
+                                    Post
+                                </button>
+                            </div>
+                            <p id="reply-msg-${r.id}" class="text-xs mt-1 min-h-[14px]"></p>
+
+                            <!-- Replies list -->
+                            <div id="replies-${r.id}" class="hidden mt-2 space-y-0"></div>
                         </div>
                     </div>`;
             }).join("");
@@ -508,15 +534,18 @@
                     ? `${API}/${rp.user_picture}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(rp.username)}&background=f3f4ff&color=6366f1&size=40`;
                 const date = new Date(rp.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-                const likeClass    = rp.my_vote === 1  ? "text-indigo-600" : "text-gray-400 hover:text-indigo-600";
-                const dislikeClass = rp.my_vote === -1 ? "text-red-500"   : "text-gray-400 hover:text-red-500";
+                const likeClass    = rp.my_vote === 1  ? "like-active"    : "";
+                const dislikeClass = rp.my_vote === -1 ? "dislike-active" : "";
                 return `
-                    <div class="flex gap-3 items-start">
-                        <img class="w-8 h-8 rounded-xl object-cover flex-shrink-0" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
-                        <div class="flex-1 min-w-0">
+                    <div class="flex gap-2">
+                        <div class="flex flex-col items-center flex-shrink-0" style="width:32px">
+                            <img class="w-8 h-8 rounded-xl object-cover" src="${avatarUrl}" alt="${escapeHtml(rp.username)}">
+                            <div class="w-0.5 bg-gray-100 flex-1 mt-1.5 rounded-full" style="min-height:12px"></div>
+                        </div>
+                        <div class="flex-1 min-w-0 pb-3">
                             <p class="text-xs font-bold text-gray-700">${escapeHtml(rp.username)} <span class="text-gray-300 font-normal">${date}</span></p>
                             <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">${escapeHtml(rp.reply_text)}</p>
-                            <div class="flex items-center gap-2 mt-2">
+                            <div class="flex items-center gap-1.5 mt-1.5">
                                 <button id="like-btn-${rp.id}" onclick="reactToReply(${rp.id}, 1)"
                                     class="react-btn react-sm ${likeClass}">
                                     <i class="fas fa-thumbs-up"></i>

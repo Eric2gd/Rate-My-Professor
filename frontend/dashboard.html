@@ -192,7 +192,7 @@
                         <h3 class="text-gray-800 font-bold text-lg">Recent Reviews</h3>
                         <span id="feed-count" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">0 reviews</span>
                     </div>
-                    <div id="reviews-feed" class="space-y-8 overflow-y-auto flex-1 min-h-0 pr-1">
+                    <div id="reviews-feed" class="overflow-y-auto flex-1 min-h-0 pr-1">
                         <p class="text-gray-400 text-sm text-center py-8">No reviews yet.</p>
                     </div>
                 </div>
@@ -421,8 +421,28 @@
             }
         }
 
+        async function reactToReply(replyId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/replies/${replyId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`like-count-${replyId}`).textContent    = data.likes;
+            document.getElementById(`dislike-count-${replyId}`).textContent = data.dislikes;
+            const lb  = document.getElementById(`like-btn-${replyId}`);
+            const dlb = document.getElementById(`dislike-btn-${replyId}`);
+            if (lb)  lb.className  = `react-btn react-sm ${data.my_vote === 1  ? "like-active"    : ""}`;
+            if (dlb) dlb.className = `react-btn react-sm ${data.my_vote === -1 ? "dislike-active" : ""}`;
+        }
+
         async function loadReplies(reviewId) {
-            const res = await fetch(`${API}/replies?review_id=${reviewId}`);
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${API}/replies?review_id=${reviewId}`, { headers });
             const replies = await res.json();
             replyLoaded[reviewId] = true;
 
@@ -442,23 +462,36 @@
                     const av = rep.user_picture
                         ? `${API}/${rep.user_picture}`
                         : `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.username)}&background=e0e7ff&color=4338ca&size=32`;
+                    const lc = rep.my_vote === 1  ? "like-active"    : "";
+                    const dc = rep.my_vote === -1 ? "dislike-active" : "";
                     return `
-                        <div class="flex gap-2 items-start">
-                            <img class="w-7 h-7 rounded-full object-cover flex-shrink-0 border-2 border-white"
-                                 src="${av}" alt="">
-                            <div class="flex-1 reply-bubble">
+                        <div class="flex gap-2">
+                            <div class="flex flex-col items-center flex-shrink-0" style="width:28px">
+                                <img class="w-7 h-7 rounded-full object-cover border-2 border-white" src="${av}" alt="">
+                                <div class="w-0.5 bg-gray-100 flex-1 mt-1 rounded-full" style="min-height:10px"></div>
+                            </div>
+                            <div class="flex-1 pb-2">
                                 <span class="text-xs font-bold text-gray-700">${escapeHtml(rep.username)}</span>
                                 <span class="text-[10px] text-gray-400 ml-2">${d}</span>
                                 <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">${escapeHtml(rep.reply_text)}</p>
+                                <div class="flex items-center gap-1.5 mt-1.5">
+                                    <button id="like-btn-${rep.id}" onclick="reactToReply(${rep.id}, 1)"
+                                        class="react-btn react-sm ${lc}">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        <span id="like-count-${rep.id}">${rep.likes || 0}</span>
+                                    </button>
+                                    <button id="dislike-btn-${rep.id}" onclick="reactToReply(${rep.id}, -1)"
+                                        class="react-btn react-sm ${dc}">
+                                        <i class="fas fa-thumbs-down"></i>
+                                        <span id="dislike-count-${rep.id}">${rep.dislikes || 0}</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                 }).join("");
             }
 
-            // Show reply form if logged in
-            if (localStorage.getItem("token")) {
-                form.style.display = 'flex';
-            }
+            if (token) form.style.display = 'flex';
         }
 
         async function submitReply(reviewId) {
@@ -481,8 +514,28 @@
         }
 
         // ── Load global reviews feed ──────────────────────────────────────
+        async function reactToReview(reviewId, value) {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const res = await fetch(`${API}/reviews/${reviewId}/react`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById(`rev-like-count-${reviewId}`).textContent    = data.likes;
+            document.getElementById(`rev-dislike-count-${reviewId}`).textContent = data.dislikes;
+            const lb  = document.getElementById(`rev-like-btn-${reviewId}`);
+            const dlb = document.getElementById(`rev-dislike-btn-${reviewId}`);
+            if (lb)  lb.className  = `react-btn react-sm ${data.my_vote === 1  ? "like-active"    : ""}`;
+            if (dlb) dlb.className = `react-btn react-sm ${data.my_vote === -1 ? "dislike-active" : ""}`;
+        }
+
         async function loadReviews() {
-            const res = await fetch(`${API}/reviews`);
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${API}/reviews`, { headers });
             const reviews = await res.json();
 
             document.getElementById("feed-count").textContent =
@@ -512,38 +565,52 @@
                     ? `${API}/${r.user_picture}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.username)}&background=e0e7ff&color=4338ca&size=64`;
                 return `
-                    <div class="rmp-anim ${i > 0 ? "border-t border-gray-50 pt-8" : ""} flex gap-6" style="animation-delay:${i * 0.07}s">
-                        <img class="w-12 h-12 rounded-2xl object-cover border-2 border-gray-50 flex-shrink-0"
-                             src="${avatarUrl}" alt="${escapeHtml(r.username)}">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-2">
+                    <div class="rmp-anim flex gap-3" style="animation-delay:${i * 0.07}s">
+                        <!-- Avatar + thread line -->
+                        <div class="flex flex-col items-center flex-shrink-0" style="width:44px">
+                            <img class="w-11 h-11 rounded-2xl object-cover border-2 border-gray-50"
+                                 src="${avatarUrl}" alt="${escapeHtml(r.username)}">
+                            <div class="w-0.5 bg-gray-100 flex-1 mt-2 rounded-full" style="min-height:24px"></div>
+                        </div>
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0 pb-5">
+                            <div class="flex justify-between items-start mb-1">
                                 <div>
-                                    <h4 class="font-bold text-gray-800">
-                                        ${escapeHtml(r.username)}
-                                        <span class="text-gray-300 font-normal mx-2">on</span>
-                                        <a href="professor-profile.html?id=${r.professor_id}"
-                                           class="text-indigo-600 hover:underline">${escapeHtml(r.professor_name)}</a>
-                                    </h4>
-                                    <p class="text-xs text-gray-400 font-medium">${date}</p>
+                                    <span class="font-bold text-gray-800 text-sm">${escapeHtml(r.username)}</span>
+                                    <span class="text-gray-300 font-normal mx-1 text-xs">on</span>
+                                    <a href="professor-profile.html?id=${r.professor_id}"
+                                       class="text-indigo-600 hover:underline text-sm font-semibold">${escapeHtml(r.professor_name)}</a>
+                                    <p class="text-xs text-gray-400 font-medium mt-0.5">${date}</p>
                                 </div>
                                 <div class="flex text-sm flex-shrink-0">${renderStars(r.rating)}</div>
                             </div>
                             <p class="text-gray-500 text-sm leading-relaxed mb-3">${escapeHtml(r.review_text)}</p>
 
-                            <!-- Replies toggle -->
-                            <button onclick="toggleReplies(${r.id})"
-                                class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition font-medium">
-                                <i class="far fa-comment-dots"></i>
-                                <span id="rep-count-${r.id}">Replies</span>
-                                <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
-                            </button>
+                            <!-- Single action row -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button id="rev-like-btn-${r.id}" onclick="reactToReview(${r.id}, 1)"
+                                    class="react-btn react-sm ${r.my_vote === 1 ? 'like-active' : ''}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span id="rev-like-count-${r.id}">${r.likes || 0}</span>
+                                </button>
+                                <button id="rev-dislike-btn-${r.id}" onclick="reactToReview(${r.id}, -1)"
+                                    class="react-btn react-sm ${r.my_vote === -1 ? 'dislike-active' : ''}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span id="rev-dislike-count-${r.id}">${r.dislikes || 0}</span>
+                                </button>
+                                <button onclick="toggleReplies(${r.id})"
+                                    class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-500 transition font-semibold ml-1">
+                                    <i class="far fa-comment-dots text-[10px]"></i>
+                                    <span id="rep-count-${r.id}">Replies</span>
+                                    <i id="rep-chev-${r.id}" class="fas fa-chevron-down transition-transform duration-200" style="font-size:9px"></i>
+                                </button>
+                            </div>
 
                             <!-- Replies section -->
-                            <div id="replies-${r.id}" class="hidden mt-3 space-y-2 pl-3 border-l-2 border-indigo-50">
-                                <div id="rep-list-${r.id}" class="space-y-2">
+                            <div id="replies-${r.id}" class="hidden mt-3">
+                                <div id="rep-list-${r.id}">
                                     <p class="text-xs text-gray-400">Loading...</p>
                                 </div>
-                                <!-- Reply form (shown when logged in) -->
                                 <div id="rep-form-${r.id}" class="gap-2 mt-2" style="display:none">
                                     <input id="rep-input-${r.id}" type="text"
                                         placeholder="Write a reply..."
