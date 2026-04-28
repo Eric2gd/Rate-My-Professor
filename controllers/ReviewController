@@ -1,0 +1,30 @@
+class ReviewController {
+  constructor(reviewService) {
+    this.reviewService = reviewService;
+  }
+
+  get = async (req, res) => {
+    try {
+      const { professor_id } = req.query;
+      const reviews = await this.reviewService.getReviews(professor_id);
+      res.json(reviews);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
+  create = async (req, res) => {
+    try {
+      const review = await this.reviewService.addReview({
+        ...req.body,
+        username: req.user.username
+      });
+
+      res.json({ message: "Review submitted", review });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+}
+
+module.exports = ReviewController;

@@ -1,0 +1,19 @@
+// using service layer pattern to separate concerns
+class ProfessorService {
+  constructor(professorRepository) {
+    this.professorRepository = professorRepository;
+  }
+
+  async getAllProfessors() {
+    return await this.professorRepository.getAll();
+  }
+
+  async addProfessor(name, department) {
+    if (!name || !department) {
+      throw new Error("Name and department required");
+    }
+    return await this.professorRepository.create(name, department);
+  }
+}
+
+module.exports = ProfessorService;
