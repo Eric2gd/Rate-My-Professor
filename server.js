@@ -1,11 +1,40 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const cors = require("cors");
+<<<<<<< Updated upstream
 const mysql = require("mysql2");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+=======
+
+const db = require("./config/db");
+const authenticateToken = require("./middleware/authMiddleware");
+
+// Repositories
+// using dependency injection pattern 
+const UserRepository = require("./repositories/UserRepository");
+const ProfessorRepository = require("./repositories/ProfessorRepository");
+const ReviewRepository = require("./repositories/ReviewRepository");
+const ReplyRepository = require("./repositories/ReplyRepository");
+
+// Services
+const AuthService = require("./services/AuthService");
+const ProfessorService = require("./services/ProfessorService");
+const ReviewService = require("./services/ReviewService");
+const ReplyService = require("./services/ReplyService");
+
+// Controllers
+const AuthController = require("./controllers/AuthController");
+const ProfessorController = require("./controllers/ProfessorController");
+const ReviewController = require("./controllers/ReviewController");
+const ReplyController = require("./controllers/ReplyController");
+
+// Routes
+const authRoutes = require("./routes/authRoutes");
+const professorRoutes = require("./routes/professorRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const replyRoutes = require("./routes/replyRoutes");
+>>>>>>> Stashed changes
 
 const app = express();
 app.use(express.json());
@@ -40,32 +69,29 @@ const upload = multer({
 
 const SECRET = "mysecretkey";
 
-// =========================
-// DATABASE CONNECTION
-// =========================
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "rate_my_professor"
-});
+// Dependency Injection
+const userRepo = new UserRepository(db);
+const professorRepo = new ProfessorRepository(db);
+const reviewRepo = new ReviewRepository(db);
+const replyRepo = new ReplyRepository(db);
 
-db.connect(err => {
-  if (err) throw err;
-  console.log("Database connected!");
-});
+const authService = new AuthService(userRepo, SECRET);
+const professorService = new ProfessorService(professorRepo);
+const reviewService = new ReviewService(reviewRepo);
+const replyService = new ReplyService(replyRepo);
 
-// =========================
-// REGISTER
-// =========================
-app.post("/register", async (req, res) => {
-  try {
-    const { username, password } = req.body;
+const authController = new AuthController(authService);
+const professorController = new ProfessorController(professorService);
+const reviewController = new ReviewController(reviewService);
+const replyController = new ReplyController(replyService);
 
-    // Check if user exists
-    db.query("SELECT * FROM users WHERE username = ?", [username], async (err, results) => {
-      if (err) return res.status(500).json({ message: "Database error" });
+// Routes
+app.use("/auth", authRoutes(authController));
+app.use("/professors", professorRoutes(professorController, authenticateToken));
+app.use("/reviews", reviewRoutes(reviewController, authenticateToken));
+app.use("/replies", replyRoutes(replyController, authenticateToken));
 
+<<<<<<< Updated upstream
       if (results.length > 0) {
         return res.status(400).json({ message: "User already exists" });
       }
@@ -421,6 +447,8 @@ app.post("/professors/:id/profile-picture", authenticateToken, upload.single("pi
 // =========================
 // START SERVER
 // =========================
+=======
+>>>>>>> Stashed changes
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
