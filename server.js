@@ -24,7 +24,7 @@ const ReplyController = require("./controllers/ReplyController");
 
 // Routes
 const authRoutes = require("./routes/authRoutes");
-const professorRoutes = require("./routes/professorRoutes");
+const professorRoutes = require("./routes/ProfessorRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const replyRoutes = require("./routes/replyRoutes");
 
