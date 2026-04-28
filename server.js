@@ -646,6 +646,24 @@ app.post("/reviews/:id/react", authenticateToken, (req, res) => {
     );
   };
 
+  // Notify the review author when someone likes their review (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      "SELECT username, professor_id FROM reviews WHERE id = ?",
+      [reviewId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${reviewId}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your review`, link]
+          );
+        }
+      }
+    );
+  };
+
   db.query(
     "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
     [reviewId, req.user.username],
@@ -653,18 +671,21 @@ app.post("/reviews/:id/react", authenticateToken, (req, res) => {
       if (err) return res.status(500).json({ message: "Database error" });
       if (existing.length > 0) {
         if (existing[0].value === value) {
+          // Toggle off — no notification
           db.query("DELETE FROM review_likes WHERE review_id = ? AND username = ?",
             [reviewId, req.user.username],
             (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
         } else {
+          // Switching vote — notify if switching TO like
           db.query("UPDATE review_likes SET value = ? WHERE review_id = ? AND username = ?",
             [value, reviewId, req.user.username],
-            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
         }
       } else {
+        // New vote — notify if it's a like
         db.query("INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)",
           [reviewId, req.user.username, value],
-          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); });
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); });
       }
     }
   );
@@ -696,6 +717,25 @@ app.post("/replies/:id/react", authenticateToken, (req, res) => {
     );
   };
 
+  // Notify the reply author when someone likes their comment (not on toggle-off)
+  const notifyLike = () => {
+    if (value !== 1) return;
+    db.query(
+      `SELECT rp.username, r.professor_id, rp.review_id
+       FROM replies rp JOIN reviews r ON rp.review_id = r.id WHERE rp.id = ?`,
+      [replyId],
+      (err3, rows) => {
+        if (!err3 && rows.length > 0 && rows[0].username !== req.user.username) {
+          const link = `professor-profile.html?id=${rows[0].professor_id}&review=${rows[0].review_id}`;
+          db.query(
+            "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+            [rows[0].username, `${req.user.username} liked your comment`, link]
+          );
+        }
+      }
+    );
+  };
+
   db.query(
     "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
     [replyId, req.user.username],
@@ -713,14 +753,14 @@ app.post("/replies/:id/react", authenticateToken, (req, res) => {
           db.query(
             "UPDATE reply_likes SET value = ? WHERE reply_id = ? AND username = ?",
             [value, replyId, req.user.username],
-            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+            (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
           );
         }
       } else {
         db.query(
           "INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)",
           [replyId, req.user.username, value],
-          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); returnCounts(); }
+          (err2) => { if (err2) return res.status(500).json({ message: "Database error" }); notifyLike(); returnCounts(); }
         );
       }
     }
@@ -737,6 +777,20 @@ app.get("/notifications", authenticateToken, (req, res) => {
     (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
       res.json(results);
+    }
+  );
+});
+
+// =========================
+// CLEAR ALL NOTIFICATIONS (Protected)
+// =========================
+app.delete("/notifications", authenticateToken, (req, res) => {
+  db.query(
+    "DELETE FROM notifications WHERE username = ?",
+    [req.user.username],
+    (err) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ message: "Notifications cleared" });
     }
   );
 });

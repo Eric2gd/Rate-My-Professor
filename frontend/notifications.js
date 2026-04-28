@@ -127,10 +127,15 @@ async function _renderNotifications() {
         const unread = notifs.filter(n => !n.is_read).length;
         _updateHeaderCount(unread);
 
+        const clearBtn = document.getElementById('notif-clear-btn');
+
         if (notifs.length === 0) {
             list.innerHTML = '<div class="notif-empty">You\'re all caught up!</div>';
+            if (clearBtn) clearBtn.classList.add('hidden');
             return;
         }
+
+        if (clearBtn) clearBtn.classList.remove('hidden');
 
         list.innerHTML = notifs.map((n, i) => {
             const { cls, fa } = _iconFor(n.type);
@@ -151,14 +156,48 @@ async function _renderNotifications() {
     }
 }
 
-// Bootstrap: create overlay + fetch count once DOM is ready
+async function clearNotifications() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    await fetch(`${NOTIF_API}/notifications`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const list = document.getElementById('notif-list');
+    if (list) list.innerHTML = '<div class="notif-empty">You\'re all caught up!</div>';
+    _updateBadge(0);
+    _updateHeaderCount(0);
+    const btn = document.getElementById('notif-clear-btn');
+    if (btn) btn.classList.add('hidden');
+}
+
+// Bootstrap: create overlay + inject clear button + fetch count once DOM is ready
 (function _init() {
     document.addEventListener('DOMContentLoaded', () => {
+        // Overlay
         const overlay = document.createElement('div');
         overlay.id        = 'notif-overlay';
         overlay.className = 'notif-overlay hidden';
         overlay.addEventListener('click', closeNotifications);
         document.body.appendChild(overlay);
+
+        // Group the count badge + clear button together on the right of the header
+        const header = document.querySelector('.notif-header');
+        if (header) {
+            const countEl = header.querySelector('#notif-header-count');
+            const right = document.createElement('div');
+            right.style.cssText = 'display:flex;align-items:center;gap:8px;';
+            if (countEl) right.appendChild(countEl);
+
+            const btn = document.createElement('button');
+            btn.id          = 'notif-clear-btn';
+            btn.className   = 'notif-clear-btn hidden';
+            btn.textContent = 'Clear all';
+            btn.onclick     = clearNotifications;
+            right.appendChild(btn);
+
+            header.appendChild(right);
+        }
 
         fetchNotificationCount();
     });

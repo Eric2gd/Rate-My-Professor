@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="theme.js"></script>
 </head>
 <body class="flex min-h-screen">
 
@@ -114,8 +115,24 @@
             <!-- 2-column grid on desktop, single column on mobile -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <!-- Left column: Profile + Account Info -->
+                <!-- Left column: Appearance + Profile + Account Info -->
                 <div class="space-y-6">
+
+                    <!-- Appearance -->
+                    <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.02s">
+                        <h2 class="text-base font-bold text-gray-800 mb-1">Appearance</h2>
+                        <p class="text-xs text-gray-400 mb-6">Choose how RateMyProf looks to you.</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Dark Mode</p>
+                                <p class="text-xs text-gray-400 mt-0.5">Switch to a darker colour scheme</p>
+                            </div>
+                            <button id="dark-mode-toggle" onclick="toggleDarkMode()" class="theme-toggle" aria-label="Toggle dark mode">
+                                <i class="fas fa-sun  theme-icon theme-icon-sun"></i>
+                                <i class="fas fa-moon theme-icon theme-icon-moon"></i>
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Profile Picture -->
                     <div class="rmp-anim bg-white rounded-[32px] p-8 shadow-sm border border-gray-50" style="animation-delay:0.05s">
