@@ -1,4 +1,4 @@
-const NOTIF_API = 'http://localhost:3000';
+const NOTIF_API = 'https://rate-my-professor-real.vercel.app/';
 
 function _timeAgo(dateStr) {
     const diff  = Date.now() - new Date(dateStr).getTime();
