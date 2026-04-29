@@ -12,6 +12,18 @@ class ReplyController {
     }
   };
 
+  react = async (req, res) => {
+    try {
+      const { value } = req.body;
+      const result = await this.replyService.replyRepository.react(
+        req.params.id, req.user.username, value
+      );
+      res.json(result);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
   create = async (req, res) => {
     try {
       const reply = await this.replyService.addReply({

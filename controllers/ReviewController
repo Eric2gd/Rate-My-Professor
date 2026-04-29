@@ -13,6 +13,27 @@ class ReviewController {
     }
   };
 
+  getMine = async (req, res) => {
+    try {
+      const reviews = await this.reviewService.reviewRepository.getByUsername(req.user.username);
+      res.json(reviews);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
+  react = async (req, res) => {
+    try {
+      const { value } = req.body;
+      const result = await this.reviewService.reviewRepository.react(
+        req.params.id, req.user.username, value
+      );
+      res.json(result);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
   create = async (req, res) => {
     try {
       const review = await this.reviewService.addReview({

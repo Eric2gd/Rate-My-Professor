@@ -17,6 +17,31 @@ class ReplyRepository {
     });
   }
 
+  react(replyId, username, value) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        `INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE value = IF(value = VALUES(value), NULL, VALUES(value))`,
+        [replyId, username, value],
+        (err) => {
+          if (err) return reject(err);
+          this.db.query(
+            `SELECT
+               SUM(value = 1)  AS likes,
+               SUM(value = -1) AS dislikes,
+               (SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?) AS my_vote
+             FROM reply_likes WHERE reply_id = ? AND value IS NOT NULL`,
+            [replyId, username, replyId],
+            (err2, rows) => {
+              if (err2) reject(err2);
+              else resolve(rows[0]);
+            }
+          );
+        }
+      );
+    });
+  }
+
   create(data) {
     const { review_id, username, reply_text } = data;
 
