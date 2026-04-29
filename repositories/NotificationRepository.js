@@ -6,7 +6,9 @@ class NotificationRepository {
   getByUsername(username) {
     return new Promise((resolve, reject) => {
       this.db.query(
-        "SELECT * FROM notifications WHERE username = ? ORDER BY created_at DESC LIMIT 50",
+        `SELECT * FROM notifications
+         WHERE username = ? AND created_at > DATE_SUB(NOW(), INTERVAL 4 WEEK)
+         ORDER BY created_at DESC LIMIT 50`,
         [username],
         (err, results) => {
           if (err) reject(err);

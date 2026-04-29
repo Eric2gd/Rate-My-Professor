@@ -43,7 +43,7 @@ class ReplyRepository {
             // Insert like notification (only when adding a like, not unliking)
             if (!isSame && value === 1) {
               this.db.query(
-                `SELECT rp.username AS owner, p.name AS prof
+                `SELECT rp.username AS owner, rv.id AS review_id, p.name AS prof
                  FROM replies rp
                  JOIN reviews rv ON rp.review_id = rv.id
                  JOIN professors p ON rv.professor_id = p.id
@@ -52,8 +52,8 @@ class ReplyRepository {
                 (_, info) => {
                   if (info && info[0] && info[0].owner !== username) {
                     this.db.query(
-                      "INSERT INTO notifications (username, type, message) VALUES (?, 'like', ?)",
-                      [info[0].owner, `${username} liked your reply on ${info[0].prof}`]
+                      "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+                      [info[0].owner, `${username} liked your reply on ${info[0].prof}`, `my-reviews.html#review-card-${info[0].review_id}`]
                     );
                   }
                 }
@@ -125,8 +125,8 @@ class ReplyRepository {
             (_, info) => {
               if (info && info[0] && info[0].owner !== username) {
                 this.db.query(
-                  "INSERT INTO notifications (username, type, message) VALUES (?, 'reply', ?)",
-                  [info[0].owner, `${username} replied to your review on ${info[0].prof}`]
+                  "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
+                  [info[0].owner, `${username} replied to your review on ${info[0].prof}`, `my-reviews.html#review-card-${review_id}`]
                 );
               }
             }

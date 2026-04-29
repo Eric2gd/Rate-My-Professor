@@ -691,7 +691,18 @@
             if (e.target === this) closeEditModal();
         });
 
-        initUser().then(() => loadMyReviews());
+        initUser().then(() => loadMyReviews()).then(() => {
+            const hash = window.location.hash;
+            if (!hash) return;
+            // Wait a tick for DOM to settle, then scroll + pulse
+            setTimeout(() => {
+                const el = document.querySelector(hash);
+                if (!el) return;
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("review-highlight");
+                el.addEventListener("animationend", () => el.classList.remove("review-highlight"), { once: true });
+            }, 300);
+        });
     </script>
     <!-- Mobile bottom nav -->
     <nav class="mobile-bottom-nav lg:hidden">

@@ -184,6 +184,8 @@
             gap: 1rem;
             align-items: center;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 10;
         }
 
         .btn-cta {
@@ -239,6 +241,8 @@
             opacity: 0.75;
             position: absolute;
             bottom: 0;
+            z-index: 1;
+            pointer-events: none;
             box-shadow: 0 -30px 120px rgba(99, 102, 241, 0.18);
         }
 
@@ -494,10 +498,19 @@
             .nav-links { display: none; }
             h1 { letter-spacing: -1.5px; }
             .features-grid { grid-template-columns: 1fr; }
-            .visual-container { height: 320px; }
-            .glow-blob { width: 90%; }
+            .visual-container {
+                height: 200px;
+                margin-top: 20px;
+            }
+            .glow-blob {
+                width: 85%;
+                height: 200px;
+            }
             .floating-card { display: none; }
             footer { flex-direction: column; gap: 0.75rem; text-align: center; }
+            .hero-actions { flex-direction: column; width: 100%; }
+            .btn-cta { width: 100%; text-align: center; }
+            .btn-secondary { justify-content: center; }
         }
     </style>
 </head>

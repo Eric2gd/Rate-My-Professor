@@ -94,8 +94,8 @@ class ReviewRepository {
                 (_, info) => {
                   if (info && info[0] && info[0].owner !== username) {
                     this.db.query(
-                      "INSERT INTO notifications (username, type, message) VALUES (?, 'like', ?)",
-                      [info[0].owner, `${username} liked your review on ${info[0].prof}`]
+                      "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+                      [info[0].owner, `${username} liked your review on ${info[0].prof}`, `my-reviews.html#review-card-${reviewId}`]
                     );
                   }
                 }
