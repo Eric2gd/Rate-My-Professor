@@ -9,6 +9,7 @@ const UserRepository = require("./repositories/UserRepository");
 const ProfessorRepository = require("./repositories/ProfessorRepository");
 const ReviewRepository = require("./repositories/ReviewRepository");
 const ReplyRepository = require("./repositories/ReplyRepository");
+const NotificationRepository = require("./repositories/NotificationRepository");
 
 // Services
 const AuthService = require("./services/AuthService");
@@ -21,12 +22,15 @@ const AuthController = require("./controllers/AuthController");
 const ProfessorController = require("./controllers/ProfessorController");
 const ReviewController = require("./controllers/ReviewController");
 const ReplyController = require("./controllers/ReplyController");
+const NotificationController = require("./controllers/NotificationController");
 
 // Routes
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const professorRoutes = require("./routes/ProfessorRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const replyRoutes = require("./routes/replyRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const corsOpts = {
   origin: [
@@ -47,6 +51,7 @@ const userRepo = new UserRepository(db);
 const professorRepo = new ProfessorRepository(db);
 const reviewRepo = new ReviewRepository(db);
 const replyRepo = new ReplyRepository(db);
+const notifRepo = new NotificationRepository(db);
 
 const authService = new AuthService(userRepo, SECRET);
 const professorService = new ProfessorService(professorRepo);
@@ -57,12 +62,15 @@ const authController = new AuthController(authService);
 const professorController = new ProfessorController(professorService);
 const reviewController = new ReviewController(reviewService);
 const replyController = new ReplyController(replyService);
+const notifController = new NotificationController(notifRepo);
 
 // Routes
 app.use("/auth", authRoutes(authController));
+app.use("/users", userRoutes(authController, authenticateToken));
 app.use("/professors", professorRoutes(professorController, authenticateToken));
 app.use("/reviews", reviewRoutes(reviewController, authenticateToken));
 app.use("/replies", replyRoutes(replyController, authenticateToken));
+app.use("/notifications", notificationRoutes(notifController, authenticateToken));
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

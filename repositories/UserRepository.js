@@ -17,6 +17,19 @@ class UserRepository {
     });
   }
 
+  getProfile(username) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "SELECT id, username, profile_picture, created_at FROM users WHERE username = ?",
+        [username],
+        (err, results) => {
+          if (err) reject(err);
+          else resolve(results[0]);
+        }
+      );
+    });
+  }
+
   createUser(username, password) {
     return new Promise((resolve, reject) => {
       this.db.query(

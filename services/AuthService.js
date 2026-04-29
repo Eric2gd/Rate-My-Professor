@@ -20,6 +20,10 @@ class AuthService {
     return { message: "User registered successfully" };
   }
 
+  async getProfile(username) {
+    return await this.userRepository.getProfile(username);
+  }
+
   async login(username, password) {
     const user = await this.userRepository.findByUsername(username);
     if (!user) throw new Error("Invalid credentials");
