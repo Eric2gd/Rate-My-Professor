@@ -34,6 +34,27 @@ class ReviewController {
     }
   };
 
+  update = async (req, res) => {
+    try {
+      const { review_text, rating } = req.body;
+      const result = await this.reviewService.reviewRepository.update(
+        req.params.id, req.user.username, review_text, rating
+      );
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
+  delete = async (req, res) => {
+    try {
+      await this.reviewService.reviewRepository.delete(req.params.id, req.user.username);
+      res.json({ message: "Deleted" });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
   create = async (req, res) => {
     try {
       const review = await this.reviewService.addReview({

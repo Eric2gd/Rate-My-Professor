@@ -24,6 +24,26 @@ class ReplyController {
     }
   };
 
+  update = async (req, res) => {
+    try {
+      const result = await this.replyService.replyRepository.update(
+        req.params.id, req.user.username, req.body.reply_text
+      );
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
+  delete = async (req, res) => {
+    try {
+      await this.replyService.replyRepository.delete(req.params.id, req.user.username);
+      res.json({ message: "Deleted" });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
   create = async (req, res) => {
     try {
       const reply = await this.replyService.addReply({

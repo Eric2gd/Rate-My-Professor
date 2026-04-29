@@ -81,6 +81,34 @@ class ReviewRepository {
     });
   }
 
+  update(id, username, review_text, rating) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "UPDATE reviews SET review_text = ?, rating = ? WHERE id = ? AND username = ?",
+        [review_text, rating, id, username],
+        (err, result) => {
+          if (err) reject(err);
+          else if (result.affectedRows === 0) reject(new Error("Not found or not yours"));
+          else resolve({ id, review_text, rating });
+        }
+      );
+    });
+  }
+
+  delete(id, username) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "DELETE FROM reviews WHERE id = ? AND username = ?",
+        [id, username],
+        (err, result) => {
+          if (err) reject(err);
+          else if (result.affectedRows === 0) reject(new Error("Not found or not yours"));
+          else resolve();
+        }
+      );
+    });
+  }
+
   create(data) {
     const { professor_id, username, review_text, rating } = data;
 
