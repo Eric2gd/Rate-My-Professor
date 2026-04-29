@@ -31,6 +31,7 @@ const professorRoutes = require("./routes/ProfessorRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const replyRoutes = require("./routes/replyRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
 
 const corsOpts = {
   origin: [
@@ -71,6 +72,7 @@ app.use("/professors", professorRoutes(professorController, authenticateToken));
 app.use("/reviews", reviewRoutes(reviewController, authenticateToken));
 app.use("/replies", replyRoutes(replyController, authenticateToken));
 app.use("/notifications", notificationRoutes(notifController, authenticateToken));
+app.use("/departments", departmentRoutes(db));
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

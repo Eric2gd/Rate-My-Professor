@@ -32,7 +32,7 @@ class AuthService {
     if (!isMatch) throw new Error("Invalid credentials");
 
     const token = jwt.sign({ username: user.username }, this.secret, {
-      expiresIn: "1h"
+      expiresIn: "7d"
     });
 
     return { message: "Login successful", token };
