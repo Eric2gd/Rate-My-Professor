@@ -179,7 +179,8 @@
 
 /* Promo banner — stays vibrant but shadow drops the light indigo tint */
 [data-theme="dark"] .bg-indigo-600 { background-color: #4338ca !important; }
-[data-theme="dark"] .shadow-indigo-100 {
+[data-theme="dark"] .shadow-indigo-100,
+[data-theme="dark"] .shadow-indigo-200 {
     --tw-shadow-color: rgba(0,0,0,0.4) !important;
     --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color) !important;
     box-shadow: var(--tw-shadow) !important;
