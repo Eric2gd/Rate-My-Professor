@@ -5,7 +5,16 @@ class ReplyController {
 
   get = async (req, res) => {
     try {
-      const replies = await this.replyService.getReplies(req.query.review_id);
+      let username = null;
+      const auth = req.headers.authorization;
+      if (auth) {
+        try {
+          const jwt = require("jsonwebtoken");
+          const decoded = jwt.verify(auth.replace("Bearer ", ""), process.env.JWT_SECRET || "mysecretkey");
+          username = decoded.username;
+        } catch { /* expired/invalid — just return no my_vote */ }
+      }
+      const replies = await this.replyService.replyRepository.getByReview(req.query.review_id, username);
       res.json(replies);
     } catch (err) {
       res.status(400).json({ message: err.message });

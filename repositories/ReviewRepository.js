@@ -48,7 +48,9 @@ class ReviewRepository {
   getByUsername(username) {
     return new Promise((resolve, reject) => {
       this.db.query(
-        `SELECT r.*, p.name AS professor_name, d.name AS department
+        `SELECT r.*, p.name AS professor_name, d.name AS department,
+           COALESCE((SELECT SUM(value=1)  FROM review_likes WHERE review_id=r.id),0) AS likes,
+           COALESCE((SELECT SUM(value=-1) FROM review_likes WHERE review_id=r.id),0) AS dislikes
          FROM reviews r
          JOIN professors p ON r.professor_id = p.id
          LEFT JOIN departments d ON p.department_id = d.id
@@ -81,6 +83,24 @@ class ReviewRepository {
           const params = isSame ? [reviewId, username] : [reviewId, username, value];
           this.db.query(sql, params, (err2) => {
             if (err2) return reject(err2);
+            // Insert like notification (only when adding a like, not unliking)
+            if (!isSame && value === 1) {
+              this.db.query(
+                `SELECT rv.username AS owner, p.name AS prof
+                 FROM reviews rv
+                 JOIN professors p ON rv.professor_id = p.id
+                 WHERE rv.id = ?`,
+                [reviewId],
+                (_, info) => {
+                  if (info && info[0] && info[0].owner !== username) {
+                    this.db.query(
+                      "INSERT INTO notifications (username, type, message) VALUES (?, 'like', ?)",
+                      [info[0].owner, `${username} liked your review on ${info[0].prof}`]
+                    );
+                  }
+                }
+              );
+            }
             // Return updated counts
             this.db.query(
               `SELECT
