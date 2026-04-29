@@ -58,24 +58,36 @@ class ReviewRepository {
 
   react(reviewId, username, value) {
     return new Promise((resolve, reject) => {
+      // Check existing vote first
       this.db.query(
-        `INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)
-         ON DUPLICATE KEY UPDATE value = IF(value = VALUES(value), NULL, VALUES(value))`,
-        [reviewId, username, value],
-        (err) => {
+        "SELECT value FROM review_likes WHERE review_id = ? AND username = ?",
+        [reviewId, username],
+        (err, rows) => {
           if (err) return reject(err);
-          this.db.query(
-            `SELECT
-               SUM(value = 1)  AS likes,
-               SUM(value = -1) AS dislikes,
-               (SELECT value FROM review_likes WHERE review_id = ? AND username = ?) AS my_vote
-             FROM review_likes WHERE review_id = ? AND value IS NOT NULL`,
-            [reviewId, username, reviewId],
-            (err2, rows) => {
-              if (err2) reject(err2);
-              else resolve(rows[0]);
-            }
-          );
+          const existing = rows[0];
+          const isSame = existing && existing.value === value;
+          // Toggle off if same vote, otherwise upsert
+          const sql = isSame
+            ? "DELETE FROM review_likes WHERE review_id = ? AND username = ?"
+            : `INSERT INTO review_likes (review_id, username, value) VALUES (?, ?, ?)
+               ON DUPLICATE KEY UPDATE value = VALUES(value)`;
+          const params = isSame ? [reviewId, username] : [reviewId, username, value];
+          this.db.query(sql, params, (err2) => {
+            if (err2) return reject(err2);
+            // Return updated counts
+            this.db.query(
+              `SELECT
+                 COALESCE(SUM(value = 1), 0)  AS likes,
+                 COALESCE(SUM(value = -1), 0) AS dislikes,
+                 (SELECT value FROM review_likes WHERE review_id = ? AND username = ?) AS my_vote
+               FROM review_likes WHERE review_id = ?`,
+              [reviewId, username, reviewId],
+              (err3, result) => {
+                if (err3) reject(err3);
+                else resolve(result[0]);
+              }
+            );
+          });
         }
       );
     });
