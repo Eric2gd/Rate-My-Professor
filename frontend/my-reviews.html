@@ -165,7 +165,7 @@
     </div>
 
     <script>
-        const API = "http://localhost:3000";
+        const API = "https://rate-my-professor-phi.vercel.app";
         let editingReviewId  = null;
         let editingRating    = 0;
         const ratingLabels   = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" };
@@ -691,7 +691,18 @@
             if (e.target === this) closeEditModal();
         });
 
-        initUser().then(() => loadMyReviews());
+        initUser().then(() => loadMyReviews()).then(() => {
+            const hash = window.location.hash;
+            if (!hash) return;
+            // Wait a tick for DOM to settle, then scroll + pulse
+            setTimeout(() => {
+                const el = document.querySelector(hash);
+                if (!el) return;
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("review-highlight");
+                el.addEventListener("animationend", () => el.classList.remove("review-highlight"), { once: true });
+            }, 300);
+        });
     </script>
     <!-- Mobile bottom nav -->
     <nav class="mobile-bottom-nav lg:hidden">

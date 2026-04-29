@@ -1,0 +1,84 @@
+class ReviewController {
+  constructor(reviewService) {
+    this.reviewService = reviewService;
+  }
+
+  get = async (req, res) => {
+    try {
+      const { professor_id } = req.query;
+      // Optionally identify the user so my_vote is included — no hard auth required
+      let username = null;
+      const auth = req.headers.authorization;
+      if (auth) {
+        try {
+          const jwt = require("jsonwebtoken");
+          const decoded = jwt.verify(auth.replace("Bearer ", ""), process.env.JWT_SECRET || "mysecretkey");
+          username = decoded.username;
+        } catch { /* invalid/expired token — just return no my_vote */ }
+      }
+      const reviews = professor_id
+        ? await this.reviewService.reviewRepository.getByProfessor(professor_id, username)
+        : await this.reviewService.reviewRepository.getAll(username);
+      res.json(reviews);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
+  getMine = async (req, res) => {
+    try {
+      const reviews = await this.reviewService.reviewRepository.getByUsername(req.user.username);
+      res.json(reviews);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
+  react = async (req, res) => {
+    try {
+      const { value } = req.body;
+      const result = await this.reviewService.reviewRepository.react(
+        req.params.id, req.user.username, value
+      );
+      res.json(result);
+    } catch {
+      res.status(500).json({ message: "Database error" });
+    }
+  };
+
+  update = async (req, res) => {
+    try {
+      const { review_text, rating } = req.body;
+      const result = await this.reviewService.reviewRepository.update(
+        req.params.id, req.user.username, review_text, rating
+      );
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
+  delete = async (req, res) => {
+    try {
+      await this.reviewService.reviewRepository.delete(req.params.id, req.user.username);
+      res.json({ message: "Deleted" });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
+  create = async (req, res) => {
+    try {
+      const review = await this.reviewService.addReview({
+        ...req.body,
+        username: req.user.username
+      });
+
+      res.json({ message: "Review submitted", review });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+}
+
+module.exports = ReviewController;

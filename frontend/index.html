@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RateMyProf | Ashesi University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --text-white: #ffffff;
+            --text-gray: #a1a1aa;
+            --accent-indigo: #6366f1;
+            --accent-indigo-light: #818cf8;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            overflow-x: hidden;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 0%, #1a1535 0%, #0d0b1a 50%, #080810 100%);
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 6%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: white; }
+
+        .auth-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.55rem 1.4rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .btn-login:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            border: none;
+            color: white;
+            padding: 0.55rem 1.6rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(99, 102, 241, 0.55);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 4vh 6% 0;
+            position: relative;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 50px;
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent-indigo-light);
+            letter-spacing: 0.5px;
+            margin-bottom: 1.75rem;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-indigo-light);
+        }
+
+        h1 {
+            font-size: clamp(2.6rem, 6vw, 4.75rem);
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -2.5px;
+            margin-bottom: 1.5rem;
+            max-width: 820px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            color: var(--text-gray);
+            font-size: 1.05rem;
+            line-height: 1.7;
+            max-width: 560px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-cta {
+            background: white;
+            color: #0a0a0c;
+            border: none;
+            padding: 0.9rem 2.25rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.12);
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .btn-secondary:hover { color: white; }
+
+        /* ── Visual section ── */
+        .visual-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            height: 480px;
+            margin-top: -30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .glow-blob {
+            width: 680px;
+            height: 420px;
+            background: radial-gradient(ellipse at 50% 40%, #3730a3 0%, #1e1b4b 50%, #0d0b1a 100%);
+            border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+            filter: blur(18px);
+            opacity: 0.75;
+            position: absolute;
+            bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+            box-shadow: 0 -30px 120px rgba(99, 102, 241, 0.18);
+        }
+
+        /* Glassmorphism cards */
+        .floating-card {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.045);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 20px 22px;
+            text-align: left;
+            z-index: 10;
+        }
+
+        .card-left {
+            width: 240px;
+            bottom: 44%;
+            left: 8%;
+        }
+
+        .card-right {
+            width: 260px;
+            bottom: 18%;
+            right: 8%;
+        }
+
+        .card-top {
+            width: 210px;
+            top: 10%;
+            right: 20%;
+        }
+
+        .card-label {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: rgba(99,102,241,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-indigo-light);
+            font-size: 11px;
+        }
+
+        .card-stat {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .stars-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .stars-row i {
+            font-size: 13px;
+            color: #f59e0b;
+        }
+
+        .tag-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.2);
+            color: var(--accent-indigo-light);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 50px;
+        }
+
+        /* ── Features section ── */
+        .features {
+            padding: 6rem 6%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 3.5rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 28px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(99,102,241,0.3);
+            background: rgba(99,102,241,0.06);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 13px;
+            background: rgba(99, 102, 241, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-indigo-light);
+            font-size: 17px;
+            margin-bottom: 18px;
+        }
+
+        .feature-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            font-size: 0.875rem;
+            line-height: 1.65;
+        }
+
+        /* ── CTA section ── */
+        .cta-section {
+            text-align: center;
+            padding: 4rem 6% 6rem;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(167,139,250,0.08) 100%);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 32px;
+            padding: 4rem 2rem;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+        }
+
+        .cta-box p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .cta-box .hero-actions {
+            justify-content: center;
+        }
+
+        /* ── Footer ── */
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 2rem 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer p {
+            color: var(--text-gray);
+            font-size: 0.8rem;
+        }
+
+        footer a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+
+        footer a:hover { color: white; }
+
+        /* ── Background stars ── */
+        .stars {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 35% 65%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1.5px 1.5px at 60% 15%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 80% 40%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 5%  85%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 50% 50%, rgba(255,255,255,0.3), transparent);
+            opacity: 0.25;
+            z-index: 0;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .card-top { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            h1 { letter-spacing: -1.5px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .visual-container {
+                height: 200px;
+                margin-top: 20px;
+            }
+            .glow-blob {
+                width: 85%;
+                height: 200px;
+            }
+            .floating-card { display: none; }
+            footer { flex-direction: column; gap: 0.75rem; text-align: center; }
+            .hero-actions { flex-direction: column; width: 100%; }
+            .btn-cta { width: 100%; text-align: center; }
+            .btn-secondary { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-university"></i>
+            </div>
+            RateMyProf
+        </a>
+
+        <nav class="nav-links">
+            <a href="#">About</a>
+            <a href="#">Professors</a>
+            <a href="#">Departments</a>
+        </nav>
+
+        <div class="auth-buttons">
+            <a href="login.html" class="btn-login">Log in</a>
+            <a href="register.html" class="btn-signup">Sign up</a>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <main>
+        <section class="hero">
+            <div class="eyebrow">
+                <div class="eyebrow-dot"></div>
+                Ashesi University · Student Platform
+            </div>
+
+            <h1>Find the Right <span>Professor</span><br>for You</h1>
+
+            <p class="hero-description">
+                Read honest, peer-written reviews of Ashesi's faculty. Rate your professors,
+                share your experience, and help fellow students make informed decisions.
+            </p>
+
+            <div class="hero-actions">
+                <a href="register.html" class="btn-cta">Get Started Free</a>
+                <a href="login.html" class="btn-secondary">
+                    Already have an account <i class="fas fa-arrow-right" style="font-size:11px;"></i>
+                </a>
+            </div>
+
+            <!-- Visual -->
+            <div class="visual-container">
+                <div class="glow-blob"></div>
+
+                <!-- Card: top rating -->
+                <div class="floating-card card-top">
+                    <div class="card-label">
+                        Top Rated
+                        <div class="card-icon"><i class="fas fa-trophy"></i></div>
+                    </div>
+                    <div class="card-title">Dr. A. Mensah</div>
+                    <div class="card-sub">Computer Science</div>
+                    <div class="stars-row">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+
+                <!-- Card: stats -->
+                <div class="floating-card card-left">
+                    <div class="card-label">
+                        Reviews this semester
+                        <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                    <div class="card-stat">1,240</div>
+                    <div class="card-sub">+18% from last term</div>
+                </div>
+
+                <!-- Card: tags -->
+                <div class="floating-card card-right">
+                    <div class="card-label">
+                        Recent tags
+                        <div class="card-icon"><i class="fas fa-tag"></i></div>
+                    </div>
+                    <div class="tag-row">
+                        <span class="tag">Clear grader</span>
+                        <span class="tag">Engaging</span>
+                        <span class="tag">Helpful</span>
+                        <span class="tag">Fair exams</span>
+                        <span class="tag">Research-focused</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <div class="section-label">Why RateMyProf</div>
+            <h2 class="section-title">Everything you need to choose wisely</h2>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-star"></i></div>
+                    <h3>Honest Reviews</h3>
+                    <p>Read unfiltered, peer-written feedback on teaching style, clarity,
+                       workload, and grading — from students who've been in the seat.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-search"></i></div>
+                    <h3>Browse by Department</h3>
+                    <p>Filter professors by department or course to find exactly who you're
+                       looking for before registration opens.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Verified Students Only</h3>
+                    <p>Only registered Ashesi students can leave reviews, keeping the
+                       platform trustworthy and relevant to your experience.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-comments"></i></div>
+                    <h3>Reply & Discuss</h3>
+                    <p>Upvote helpful reviews, reply with follow-up context, and help build
+                       a richer picture of each professor over time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-bell"></i></div>
+                    <h3>Live Notifications</h3>
+                    <p>Get notified when someone replies to your review or when a new
+                       professor you follow receives feedback.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-moon"></i></div>
+                    <h3>Dark &amp; Light Mode</h3>
+                    <p>A clean, distraction-free interface that adapts to your preference —
+                       perfect for late-night exam prep reading.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <div class="cta-box">
+                <h2>Ready to share your experience?</h2>
+                <p>Join hundreds of Ashesi students helping each other navigate university
+                   life — one honest review at a time.</p>
+                <div class="hero-actions">
+                    <a href="register.html" class="btn-cta">Create an account</a>
+                    <a href="login.html" class="btn-secondary">
+                        Sign in <i class="fas fa-arrow-right" style="font-size:11px;"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 RateMyProf · Ashesi University</p>
+        <div style="display:flex; gap:1.5rem;">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="login.html">Login</a>
+            <a href="register.html">Register</a>
+        </div>
+    </footer>
+
+</body>
+</html>

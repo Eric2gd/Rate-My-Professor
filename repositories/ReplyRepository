@@ -1,0 +1,141 @@
+// repository pattern abstracting all database operations
+class ReplyRepository {
+  constructor(db) {
+    this.db = db;
+  }
+
+  getByReview(review_id, username = null) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        `SELECT rp.*, u.profile_picture AS user_picture,
+           COALESCE((SELECT SUM(value=1)  FROM reply_likes WHERE reply_id=rp.id),0) AS likes,
+           COALESCE((SELECT SUM(value=-1) FROM reply_likes WHERE reply_id=rp.id),0) AS dislikes,
+           (SELECT value FROM reply_likes WHERE reply_id=rp.id AND username=?) AS my_vote
+         FROM replies rp
+         LEFT JOIN users u ON rp.username = u.username
+         WHERE rp.review_id = ?
+         ORDER BY rp.created_at ASC`,
+        [username, review_id],
+        (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
+        }
+      );
+    });
+  }
+
+  react(replyId, username, value) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?",
+        [replyId, username],
+        (err, rows) => {
+          if (err) return reject(err);
+          const existing = rows[0];
+          const isSame = existing && existing.value === value;
+          const sql = isSame
+            ? "DELETE FROM reply_likes WHERE reply_id = ? AND username = ?"
+            : `INSERT INTO reply_likes (reply_id, username, value) VALUES (?, ?, ?)
+               ON DUPLICATE KEY UPDATE value = VALUES(value)`;
+          const params = isSame ? [replyId, username] : [replyId, username, value];
+          this.db.query(sql, params, (err2) => {
+            if (err2) return reject(err2);
+            // Insert like notification (only when adding a like, not unliking)
+            if (!isSame && value === 1) {
+              this.db.query(
+                `SELECT rp.username AS owner, rv.id AS review_id, p.name AS prof
+                 FROM replies rp
+                 JOIN reviews rv ON rp.review_id = rv.id
+                 JOIN professors p ON rv.professor_id = p.id
+                 WHERE rp.id = ?`,
+                [replyId],
+                (_, info) => {
+                  if (info && info[0] && info[0].owner !== username) {
+                    this.db.query(
+                      "INSERT INTO notifications (username, type, message, link) VALUES (?, 'like', ?, ?)",
+                      [info[0].owner, `${username} liked your reply on ${info[0].prof}`, `my-reviews.html#review-card-${info[0].review_id}`]
+                    );
+                  }
+                }
+              );
+            }
+            this.db.query(
+              `SELECT
+                 COALESCE(SUM(value = 1), 0)  AS likes,
+                 COALESCE(SUM(value = -1), 0) AS dislikes,
+                 (SELECT value FROM reply_likes WHERE reply_id = ? AND username = ?) AS my_vote
+               FROM reply_likes WHERE reply_id = ?`,
+              [replyId, username, replyId],
+              (err3, result) => {
+                if (err3) reject(err3);
+                else resolve(result[0]);
+              }
+            );
+          });
+        }
+      );
+    });
+  }
+
+  update(id, username, reply_text) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "UPDATE replies SET reply_text = ? WHERE id = ? AND username = ?",
+        [reply_text, id, username],
+        (err, result) => {
+          if (err) reject(err);
+          else if (result.affectedRows === 0) reject(new Error("Not found or not yours"));
+          else resolve({ id, reply_text });
+        }
+      );
+    });
+  }
+
+  delete(id, username) {
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "DELETE FROM replies WHERE id = ? AND username = ?",
+        [id, username],
+        (err, result) => {
+          if (err) reject(err);
+          else if (result.affectedRows === 0) reject(new Error("Not found or not yours"));
+          else resolve();
+        }
+      );
+    });
+  }
+
+  create(data) {
+    const { review_id, username, reply_text } = data;
+
+    return new Promise((resolve, reject) => {
+      this.db.query(
+        "INSERT INTO replies (review_id, username, reply_text) VALUES (?, ?, ?)",
+        [review_id, username, reply_text],
+        (err, result) => {
+          if (err) return reject(err);
+          const reply = { id: result.insertId, ...data };
+          // Notify review owner that someone replied
+          this.db.query(
+            `SELECT rv.username AS owner, p.name AS prof
+             FROM reviews rv
+             JOIN professors p ON rv.professor_id = p.id
+             WHERE rv.id = ?`,
+            [review_id],
+            (_, info) => {
+              if (info && info[0] && info[0].owner !== username) {
+                this.db.query(
+                  "INSERT INTO notifications (username, type, message, link) VALUES (?, 'reply', ?, ?)",
+                  [info[0].owner, `${username} replied to your review on ${info[0].prof}`, `my-reviews.html#review-card-${review_id}`]
+                );
+              }
+            }
+          );
+          resolve(reply);
+        }
+      );
+    });
+  }
+}
+
+module.exports = ReplyRepository;

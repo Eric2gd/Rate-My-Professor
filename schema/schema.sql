@@ -311,7 +311,7 @@ INSERT INTO `users` (`id`, `username`, `password`, `profile_picture`, `created_a
 --
 DROP TABLE IF EXISTS `department_avg_ratings`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `department_avg_ratings`  AS SELECT `d`.`id` AS `department_id`, `d`.`name` AS `department`, count(`r`.`id`) AS `total_reviews`, round(avg(`r`.`rating`),2) AS `avg_rating` FROM ((`departments` `d` left join `professors` `p` on(`p`.`department_id` = `d`.`id`)) left join `reviews` `r` on(`r`.`professor_id` = `p`.`id`)) GROUP BY `d`.`id`, `d`.`name` ;
+CREATE VIEW `department_avg_ratings`  AS SELECT `d`.`id` AS `department_id`, `d`.`name` AS `department`, count(`r`.`id`) AS `total_reviews`, round(avg(`r`.`rating`),2) AS `avg_rating` FROM ((`departments` `d` left join `professors` `p` on(`p`.`department_id` = `d`.`id`)) left join `reviews` `r` on(`r`.`professor_id` = `p`.`id`)) GROUP BY `d`.`id`, `d`.`name` ;
 
 --
 -- Indexes for dumped tables
