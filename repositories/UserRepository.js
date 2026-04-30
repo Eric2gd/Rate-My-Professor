@@ -1,5 +1,6 @@
-// using repository pattern abstracting all database operations
-class UserRepository {
+const BaseRepository = require('./BaseRepository');
+
+class UserRepository extends BaseRepository {
   constructor(db) {
     this.db = db;
   }

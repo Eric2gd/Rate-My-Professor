@@ -1,6 +1,8 @@
-// controllers/AuthController.js
-class AuthController {
+const BaseController = require('./BaseController');
+
+class AuthController extends BaseController {
   constructor(authService) {
+    super();
     this.authService = authService;
   }
 
@@ -10,17 +12,7 @@ class AuthController {
       const result = await this.authService.register(username, password);
       res.json(result);
     } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
-
-  getMe = async (req, res) => {
-    try {
-      const user = await this.authService.getProfile(req.user.username);
-      if (!user) return res.status(404).json({ message: "User not found" });
-      res.json(user);
-    } catch {
-      res.status(500).json({ message: "Server error" });
+      this.handleError(res, err);
     }
   };
 
@@ -30,7 +22,17 @@ class AuthController {
       const result = await this.authService.login(username, password);
       res.json(result);
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
+    }
+  };
+
+  getMe = async (req, res) => {
+    try {
+      const user = await this.authService.getProfile(req.user.username);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json(user);
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 }

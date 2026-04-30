@@ -1,5 +1,8 @@
-class NotificationController {
+const BaseController = require('./BaseController');
+
+class NotificationController extends BaseController {
   constructor(notificationRepository) {
+    super();
     this.repo = notificationRepository;
   }
 
@@ -7,8 +10,8 @@ class NotificationController {
     try {
       const notifs = await this.repo.getByUsername(req.user.username);
       res.json(notifs);
-    } catch {
-      res.status(500).json({ message: "Server error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -16,8 +19,8 @@ class NotificationController {
     try {
       await this.repo.markAllRead(req.user.username);
       res.json({ message: "Marked as read" });
-    } catch {
-      res.status(500).json({ message: "Server error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -25,8 +28,8 @@ class NotificationController {
     try {
       await this.repo.clearAll(req.user.username);
       res.json({ message: "Cleared" });
-    } catch {
-      res.status(500).json({ message: "Server error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 }

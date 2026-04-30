@@ -1,4 +1,6 @@
-class NotificationRepository {
+const BaseRepository = require('./BaseRepository');
+
+class NotificationRepository extends BaseRepository {
   constructor(db) {
     this.db = db;
   }

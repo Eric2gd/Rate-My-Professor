@@ -1,5 +1,8 @@
-class ReplyController {
+const BaseController = require('./BaseController');
+
+class ReplyController extends BaseController {
   constructor(replyService) {
+    super();
     this.replyService = replyService;
   }
 
@@ -12,24 +15,23 @@ class ReplyController {
           const jwt = require("jsonwebtoken");
           const decoded = jwt.verify(auth.replace("Bearer ", ""), process.env.JWT_SECRET || "mysecretkey");
           username = decoded.username;
-        } catch { /* expired/invalid — just return no my_vote */ }
+        } catch { /* expired/invalid — return no my_vote */ }
       }
       const replies = await this.replyService.replyRepository.getByReview(req.query.review_id, username);
       res.json(replies);
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 
   react = async (req, res) => {
     try {
-      const { value } = req.body;
       const result = await this.replyService.replyRepository.react(
-        req.params.id, req.user.username, value
+        req.params.id, req.user.username, req.body.value
       );
       res.json(result);
-    } catch {
-      res.status(500).json({ message: "Database error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -40,7 +42,7 @@ class ReplyController {
       );
       res.json(result);
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 
@@ -49,7 +51,7 @@ class ReplyController {
       await this.replyService.replyRepository.delete(req.params.id, req.user.username);
       res.json({ message: "Deleted" });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 
@@ -59,10 +61,9 @@ class ReplyController {
         ...req.body,
         username: req.user.username
       });
-
       res.json({ message: "Reply posted", reply });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 }

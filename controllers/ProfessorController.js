@@ -1,5 +1,8 @@
-class ProfessorController {
+const BaseController = require('./BaseController');
+
+class ProfessorController extends BaseController {
   constructor(professorService) {
+    super();
     this.professorService = professorService;
   }
 
@@ -7,8 +10,8 @@ class ProfessorController {
     try {
       const professors = await this.professorService.getAllProfessors();
       res.json(professors);
-    } catch {
-      res.status(500).json({ message: "Database error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -18,7 +21,7 @@ class ProfessorController {
       const professor = await this.professorService.addProfessor(name, department);
       res.json({ message: "Professor added", professor });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 }

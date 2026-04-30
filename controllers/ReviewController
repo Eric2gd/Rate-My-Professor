@@ -1,12 +1,14 @@
-class ReviewController {
+const BaseController = require('./BaseController');
+
+class ReviewController extends BaseController {
   constructor(reviewService) {
+    super();
     this.reviewService = reviewService;
   }
 
   get = async (req, res) => {
     try {
       const { professor_id } = req.query;
-      // Optionally identify the user so my_vote is included — no hard auth required
       let username = null;
       const auth = req.headers.authorization;
       if (auth) {
@@ -14,14 +16,14 @@ class ReviewController {
           const jwt = require("jsonwebtoken");
           const decoded = jwt.verify(auth.replace("Bearer ", ""), process.env.JWT_SECRET || "mysecretkey");
           username = decoded.username;
-        } catch { /* invalid/expired token — just return no my_vote */ }
+        } catch { /* invalid/expired — return no my_vote */ }
       }
       const reviews = professor_id
         ? await this.reviewService.reviewRepository.getByProfessor(professor_id, username)
         : await this.reviewService.reviewRepository.getAll(username);
       res.json(reviews);
-    } catch {
-      res.status(500).json({ message: "Database error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -29,20 +31,19 @@ class ReviewController {
     try {
       const reviews = await this.reviewService.reviewRepository.getByUsername(req.user.username);
       res.json(reviews);
-    } catch {
-      res.status(500).json({ message: "Database error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
   react = async (req, res) => {
     try {
-      const { value } = req.body;
       const result = await this.reviewService.reviewRepository.react(
-        req.params.id, req.user.username, value
+        req.params.id, req.user.username, req.body.value
       );
       res.json(result);
-    } catch {
-      res.status(500).json({ message: "Database error" });
+    } catch (err) {
+      this.handleError(res, err, 500);
     }
   };
 
@@ -54,7 +55,7 @@ class ReviewController {
       );
       res.json(result);
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 
@@ -63,7 +64,7 @@ class ReviewController {
       await this.reviewService.reviewRepository.delete(req.params.id, req.user.username);
       res.json({ message: "Deleted" });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 
@@ -73,10 +74,9 @@ class ReviewController {
         ...req.body,
         username: req.user.username
       });
-
       res.json({ message: "Review submitted", review });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      this.handleError(res, err);
     }
   };
 }
