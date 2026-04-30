@@ -2,6 +2,7 @@ const BaseRepository = require('./BaseRepository');
 
 class ReviewRepository extends BaseRepository {
   constructor(db) {
+    super();
     this.db = db;
   }
 

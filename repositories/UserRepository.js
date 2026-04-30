@@ -2,6 +2,7 @@ const BaseRepository = require('./BaseRepository');
 
 class UserRepository extends BaseRepository {
   constructor(db) {
+    super();
     this.db = db;
   }
 
